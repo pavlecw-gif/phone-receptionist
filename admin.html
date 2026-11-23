@@ -94,7 +94,7 @@
     <div class="card">
       <h2>Poslednji događaji</h2>
       <div class="scroll"><table>
-        <thead><tr><th>Vreme</th><th>Firma</th><th>Šta</th><th>Glas</th><th>Trajanje</th></tr></thead>
+        <thead><tr><th>Vreme</th><th>Firma</th><th>Šta</th><th>Glas</th><th>Trajanje</th><th>Snimak</th></tr></thead>
         <tbody id="evRows"></tbody>
       </table></div>
     </div>
@@ -195,7 +195,7 @@
         <td style="white-space:nowrap"><button class="s" onclick="copyLink('${esc(x.slug)}', this)">Kopiraj link</button> <button class="s" onclick="editFirm('${x.id}')">Izmeni</button></td></tr>`;
     }).join("") || `<tr><td colspan="6" class="muted">Još nema demoa.</td></tr>`;
     const byS = Object.fromEntries(firme.map((x) => [x.slug, x.ime]));
-    $("evRows").innerHTML = (ev || []).slice(0, 100).map((x) => `<tr><td class="muted">${fmtT(x.created_at)}</td><td>${esc(byS[x.firma_slug] || x.firma_slug)}</td><td>${TIP[x.tip] || esc(x.tip)}</td><td>${esc(x.glas || "")}</td><td>${fmtD(x.trajanje_sekundi)}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">Još nema događaja.</td></tr>`;
+    $("evRows").innerHTML = (ev || []).slice(0, 100).map((x) => `<tr><td class="muted">${fmtT(x.created_at)}</td><td>${esc(byS[x.firma_slug] || x.firma_slug)}</td><td>${TIP[x.tip] || esc(x.tip)}</td><td>${esc(x.glas || "")}</td><td>${fmtD(x.trajanje_sekundi)}</td><td>${x.conversation_id ? `<a href="https://elevenlabs.io/app/agents/history/${encodeURIComponent(x.conversation_id)}" target="_blank" rel="noopener">Slušaj</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">Još nema događaja.</td></tr>`;
   }
 
   sb.auth.onAuthStateChange(() => {});

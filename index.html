@@ -410,6 +410,7 @@
 
   // ---------- Poziv ----------
   let Conversation = null;
+  let convId = null;
   let conv = null, phase = "idle", connected = false, startedAt = 0, tick = null, pendingVoice = null, attempt = null;
   const stage = $("stage"), orbWrap = $("orbWrap");
 
@@ -467,13 +468,14 @@
         ime_firme: FIRMA.ime, delatnost: FIRMA.delatnost || "", grad: FIRMA.grad || "",
         podaci_firme: FIRMA.podaci_firme || "", ime_asistenta: glas.ime
       },
-      onConnect: () => {
+      onConnect: (info) => {
         connected = true; startedAt = Date.now();
+        convId = (info && info.conversationId) || null;
         $("liveImg").src = IMG(glas.img, 352); $("liveImg").alt = glas.ime;
         $("timer").textContent = "0:00";
         setPhase("live"); setMode("listening"); renderSwitch();
         setTimeout(() => { if ($("info").textContent.startsWith("Razgovor počinje")) showInfo(""); }, 3000);
-        track("poziv_pocet", { glas: glas.ime });
+        track("poziv_pocet", { glas: glas.ime, conversation_id: convId || (conv && conv.getId ? conv.getId() : null) });
         clearInterval(tick);
         tick = setInterval(() => {
           const s = Math.floor((Date.now() - startedAt) / 1000);
@@ -516,7 +518,7 @@
     if (!connected) return;
     connected = false; clearInterval(tick);
     const dur = Math.round((Date.now() - startedAt) / 1000);
-    track("poziv_zavrsen", { glas: glas.ime, trajanje_sekundi: dur });
+    track("poziv_zavrsen", { glas: glas.ime, trajanje_sekundi: dur, conversation_id: convId || (conv && conv.getId ? conv.getId() : null) });
     setPhase("ended");
   }
 
