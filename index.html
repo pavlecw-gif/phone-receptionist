@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="sr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone Receptionist – demo</title>
+<meta name="description" content="Probajte telefonskog asistenta koji se javlja umesto vas kad ne stignete.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  try { const t = localStorage.getItem('pr-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<style>
+  :root {
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-display: "Archivo", "Inter", system-ui, sans-serif;
+    --radius: 18px;
+  }
+  [data-theme="dark"] {
+    --bg: #0a0b0d; --bg-2: #0f1114; --card: #121418; --card-2: #171a1f;
+    --border: #23272e; --border-strong: #31363f;
+    --text: #f2f3f5; --muted: #949aa5; --faint: #5d636d;
+    --accent: #ff6a1f; --accent-2: #ff8a3d; --accent-ink: #160a03;
+    --accent-soft: rgba(255,106,31,.12); --ring: rgba(255,106,31,.55);
+    --danger: #ef4444; --ok: #22c55e;
+    --grid: rgba(255,255,255,.035); --glow: rgba(255,106,31,.16);
+    --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 20px 60px -20px rgba(0,0,0,.7);
+  }
+  [data-theme="light"] {
+    --bg: #f4f3ef; --bg-2: #eceae4; --card: #ffffff; --card-2: #f8f7f4;
+    --border: #e1ded6; --border-strong: #cfcbc1;
+    --text: #0f1115; --muted: #5b616c; --faint: #9a9fa8;
+    --accent: #e4500b; --accent-2: #f26a22; --accent-ink: #ffffff;
+    --accent-soft: rgba(228,80,11,.09); --ring: rgba(228,80,11,.5);
+    --danger: #dc2626; --ok: #16a34a;
+    --grid: rgba(15,17,21,.045); --glow: rgba(228,80,11,.10);
+    --shadow: 0 1px 2px rgba(15,17,21,.04), 0 18px 48px -24px rgba(15,17,21,.22);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--font-body); color: var(--text); background: var(--bg);
+    -webkit-font-smoothing: antialiased; line-height: 1.5; min-height: 100vh;
+    background-image:
+      radial-gradient(900px 480px at 85% -10%, var(--glow), transparent 60%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: auto, 44px 44px, 44px 44px;
+    transition: background-color .25s ease, color .25s ease;
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header { position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(160%) blur(12px); -webkit-backdrop-filter: saturate(160%) blur(12px); background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid var(--border); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -.01em; text-decoration: none; white-space: nowrap; }
+  .mark { width: 32px; height: 32px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+  .mark svg { width: 17px; height: 17px; }
+  .actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 11px; border: 1px solid var(--border); background: var(--card); display: grid; place-items: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .icon-btn:hover { border-color: var(--border-strong); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn .sun { display: none; } [data-theme="dark"] .icon-btn .sun { display: block; } [data-theme="dark"] .icon-btn .moon { display: none; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 11px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform .12s ease, background .15s, border-color .15s; white-space: nowrap; }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-ghost { background: var(--card); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--border-strong); }
+  .btn-lg { height: 48px; padding: 0 20px; font-size: 15px; border-radius: 13px; }
+
+  /* Hero */
+  main { padding: 40px 0 64px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: start; }
+  @media (min-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr) 520px; gap: 56px; } main { padding-top: 48px; } }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
+  h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 5.4vw, 60px); line-height: 1.02; letter-spacing: -.03em; margin: 18px 0 12px; }
+  .meta { color: var(--muted); font-size: 15px; margin: 0; }
+  .lead { font-size: 17px; color: var(--muted); max-width: 520px; margin: 22px 0 0; }
+  .lead strong { color: var(--text); font-weight: 600; }
+  .features { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 10px; max-width: 520px; }
+  .features li { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border); background: color-mix(in srgb, var(--card) 70%, transparent); border-radius: 14px; font-size: 15px; }
+  .features .ic { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .features .ic svg { width: 16px; height: 16px; }
+  .features b { display: block; font-weight: 600; }
+  .features span { color: var(--muted); font-size: 14px; }
+  .hero-cta { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+  @media (max-width: 959px) { .hide-mobile { display: none !important; } }
+  @media (min-width: 960px) { .show-mobile { display: none !important; } }
+
+  /* Call panel */
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow); overflow: hidden; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); gap: 12px; }
+  .panel-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: -.01em; margin: 0; }
+  .panel-sub { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--bg-2); border: 1px solid var(--border); flex: none; }
+  .seg button { border: 0; background: transparent; padding: 6px 11px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+  .voices { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 6px; padding: 16px 14px 6px; }
+  .voice { border: 0; background: transparent; padding: 8px 4px; border-radius: 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 7px; transition: background .15s; }
+  .voice:hover { background: var(--card-2); }
+  .voice img, .avatar-fallback { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; background: var(--bg-2); outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .15s, transform .15s; }
+  .voice[aria-checked="true"] img { outline-color: var(--accent); }
+  .voice[aria-checked="true"] .vname { color: var(--text); }
+  .vname { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .voice[hidden] { display: none; }
+  .vimg { position: relative; display: block; }
+  .vimg .spk { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: none; place-items: center; box-shadow: 0 0 0 3px var(--card); }
+  .vimg .spk svg { width: 12px; height: 12px; }
+  .voice.playing .vimg .spk { display: grid; }
+  .voice.playing img { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.06); } }
+  .hint { text-align: center; color: var(--faint); font-size: 12.5px; margin: 4px 16px 0; }
+
+  .stage { padding: 22px 20px 26px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .orb-wrap { position: relative; width: 164px; height: 164px; display: grid; place-items: center; margin: 6px 0 4px; }
+  .orb { position: relative; z-index: 1; width: 100%; height: 100%; border-radius: 50%; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--accent-ink);
+    background: radial-gradient(120% 120% at 30% 20%, var(--accent-2), var(--accent) 55%, color-mix(in srgb, var(--accent) 70%, #000) 100%);
+    box-shadow: 0 18px 50px -12px var(--ring), inset 0 2px 0 rgba(255,255,255,.25); transition: transform .15s ease; }
+  .orb:hover { transform: scale(1.025); } .orb:active { transform: scale(.97); }
+  .orb svg { width: 34px; height: 34px; }
+  .orb .lbl { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
+  .orb.busy { cursor: default; } .orb.busy:hover { transform: none; }
+  .orb .idle-c { display: contents; }
+  .orb .live-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
+  .state-live .orb { padding: 6px; background: var(--card-2); box-shadow: 0 0 0 1px var(--border); cursor: default; }
+  .state-live .orb:hover { transform: none; }
+  .state-live .orb .live-img { display: block; }
+  .state-live .orb .idle-c, .state-connecting .orb .idle-c { display: none; }
+  .spinner { display: none; width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.35); border-top-color: var(--accent-ink); animation: spin .8s linear infinite; }
+  .state-connecting .spinner { display: block; }
+  .ripple { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; pointer-events: none; }
+  .speaking .ripple { animation: ripple 1.6s ease-out infinite; }
+  .speaking .ripple.r2 { animation-delay: .55s; }
+  .speaking .ripple.r3 { animation-delay: 1.1s; }
+  .state-idle .orb { animation: breathe 3.2s ease-in-out infinite; }
+  @keyframes ripple { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.45); opacity: 0; } }
+  @keyframes breathe { 0%, 100% { box-shadow: 0 18px 50px -12px var(--ring), 0 0 0 0 var(--accent-soft), inset 0 2px 0 rgba(255,255,255,.25); } 50% { box-shadow: 0 18px 50px -12px var(--ring), 0 0 0 14px var(--accent-soft), inset 0 2px 0 rgba(255,255,255,.25); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .state-idle .orb, .speaking .ripple { animation: none; } }
+
+  .status { min-height: 22px; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .status .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .timer { font-family: var(--font-display); font-weight: 700; font-size: 26px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; margin-top: 2px; }
+  .end-btn { margin-top: 16px; background: var(--danger); color: #fff; height: 46px; padding: 0 22px; border-radius: 999px; }
+  .end-btn:hover { filter: brightness(1.08); }
+  .switch { margin-top: 18px; width: 100%; }
+  .switch p { margin: 0 0 8px; font-size: 12.5px; color: var(--faint); }
+  .switch-row { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 6px; justify-content: flex-start; scrollbar-width: thin; }
+  .switch-row button { flex: none; border: 1px solid var(--border); background: var(--card-2); border-radius: 999px; padding: 4px 10px 4px 4px; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .switch-row button:hover { border-color: var(--border-strong); }
+  .switch-row img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+  .switch-row button:disabled { opacity: .5; cursor: default; }
+
+  .msg { margin: 14px 0 0; padding: 10px 14px; border-radius: 12px; font-size: 14px; max-width: 420px; }
+  .msg.err { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+  .msg.info { background: var(--accent-soft); color: var(--text); }
+
+  .note { border-top: 1px solid var(--border); padding: 18px 20px 20px; background: var(--card-2); }
+  .note b { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .note b svg { width: 16px; height: 16px; color: var(--accent); }
+  .note p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+
+  .ended { margin: 18px 0 0; width: 100%; text-align: left; border: 1px solid var(--border); border-radius: 18px; padding: 18px; background: var(--card-2); }
+  .ended h3 { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -.01em; margin: 0; }
+  .ended p { margin: 4px 0 14px; color: var(--muted); font-size: 14px; }
+  .ended .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .linkbtn { background: none; border: 0; padding: 0; margin-top: 12px; color: var(--accent); font-weight: 600; font-size: 14px; cursor: pointer; }
+
+  footer { border-top: 1px solid var(--border); padding: 22px 0 32px; color: var(--faint); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 520px) {
+    .wrap { padding: 0 14px; }
+    .brand .txt-long { display: none; }
+    .btn-cta-txt { display: none; }
+    .btn.cta { width: 40px; padding: 0; }
+    main { padding-top: 26px; }
+    .panel-head { flex-direction: column; align-items: flex-start; }
+    .orb-wrap { width: 156px; height: 156px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#" aria-label="Phone Receptionist">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span>
+      <span>Phone <span class="txt-long">Receptionist</span></span>
+    </a>
+    <div class="actions">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Promeni temu">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a class="btn btn-primary cta" id="ctaTop" href="mailto:trajkovicpavle5@gmail.com" aria-label="Kontaktirajte nas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        <span class="btn-cta-txt">Kontakt</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap grid">
+    <section>
+      <span class="eyebrow"><span class="dot"></span>Demo · Phone Receptionist</span>
+      <h1 id="firmaIme">&nbsp;</h1>
+      <p class="meta" id="firmaMeta">&nbsp;</p>
+      <p class="lead hide-mobile">Asistent koji se javlja na telefon <strong>kad vi ne stignete</strong>: kaže radno vreme i informacije o firmi, odgovori na pitanja i zapiše ko je zvao, da biste ga vi pozvali.</p>
+      <ul class="features hide-mobile">
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><b>Javlja se i kad niko ne stigne</b><span>Gužva, pauza, posle radnog vremena, vikend.</span></div></li>
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5z"/><path d="M8 7h6M8 11h6"/></svg></span><div><b>Zna podatke o vašoj firmi</b><span>Usluge, radno vreme, adresu, kontakt.</span></div></li>
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M5 8a13 13 0 0 0 11 11"/></svg></span><div><b>Zapiše ko je zvao i šta mu treba</b><span>Ime i broj, da ga vi pozovete.</span></div></li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="panelTitle">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title" id="panelTitle">Pozovite asistenta</h2>
+          <p class="panel-sub">Možete kliknuti na slike agenata kako biste izabrali glas pre početka poziva</p>
+        </div>
+        <div class="seg" role="group" aria-label="Filter glasova">
+          <button type="button" data-f="sve" aria-pressed="true">Svi</button>
+          <button type="button" data-f="z" aria-pressed="false">Ženski</button>
+          <button type="button" data-f="m" aria-pressed="false">Muški</button>
+        </div>
+      </div>
+
+      <div id="pickerWrap">
+        <div class="voices" id="voices" role="radiogroup" aria-label="Izbor glasa"></div>
+      </div>
+
+      <div class="stage state-idle" id="stage">
+        <div class="orb-wrap" id="orbWrap">
+          <span class="ripple"></span><span class="ripple r2"></span><span class="ripple r3"></span>
+          <button class="orb" id="orb" type="button" aria-label="Pozovi">
+            <span class="idle-c">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+              <span class="lbl">Pozovi</span>
+            </span>
+            <span class="spinner" aria-hidden="true"></span>
+            <img class="live-img" id="liveImg" alt="">
+          </button>
+        </div>
+        <div class="status" id="status" aria-live="polite"><span id="selName">Izabran glas: Ana</span></div>
+        <div class="timer" id="timer" hidden>0:00</div>
+        <button class="btn end-btn" id="endBtn" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.7 13.3a16 16 0 0 0 3.4 2.6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 10.9"/><path d="M22 2 2 22"/></svg>
+          Završi poziv
+        </button>
+        <div class="switch" id="switchBox" hidden>
+          <p>Promenite glas (razgovor kreće ispočetka)</p>
+          <div class="switch-row" id="switchRow"></div>
+        </div>
+        <p class="msg err" id="err" role="alert" hidden></p>
+        <p class="msg info" id="info" role="status" hidden></p>
+
+        <div class="ended" id="ended" hidden>
+          <h3 id="endedTitle">Želite ovakvog asistenta?</h3>
+          <p>Javite se: Pavle</p>
+          <div class="row">
+            <a class="btn btn-primary btn-lg" id="endedMail" href="mailto:pavlecw@gmail.com">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+              pavlecw@gmail.com
+            </a>
+          </div>
+          <button class="linkbtn" id="againBtn" type="button">Pozovi ponovo</button>
+        </div>
+      </div>
+
+      <div class="note">
+        <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>Ovo je demo verzija</b>
+        <p>Asistent je napravljen samo na osnovu podataka sa vašeg sajta. Kada i ako započnemo saradnju, prilagođavamo ga vašoj firmi: dodajemo odgovore na pitanja koja vaši klijenti najčešće postavljaju, usklađujemo izgovor imena i stručnih termina i podešavamo ton po vašoj želji. Uz to redovno pratimo razgovore, pa asistent vremenom postaje sve bolji.</p>
+      </div>
+    </section>
+
+    <section class="show-mobile">
+      <ul class="features" style="margin-top:0">
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><b>Javlja se i kad niko ne stigne</b><span>Gužva, pauza, posle radnog vremena, vikend.</span></div></li>
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5z"/><path d="M8 7h6M8 11h6"/></svg></span><div><b>Zna podatke o vašoj firmi</b><span>Usluge, radno vreme, adresu, kontakt.</span></div></li>
+        <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M21 3l-7 7"/><path d="M5 8a13 13 0 0 0 11 11"/></svg></span><div><b>Zapiše ko je zvao i šta mu treba</b><span>Ime i broj, da ga vi pozovete.</span></div></li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Phone Receptionist · demo</span>
+    <a href="mailto:trajkovicpavle5@gmail.com" id="ctaFoot">trajkovicpavle5@gmail.com</a>
+  </div>
+</footer>
+
+<script type="module">
+  // ---------- Podešavanja ----------
+  const AGENT_ID = "agent_7901m81fn71dfp694fqgnh9fmqs5";
+  const MAX_SEC = 300;
+  const CTA_MAIL = "trajkovicpavle5@gmail.com";
+  const IMG = (id, w) => `https://wsrv.nl/?url=d8j0ntlcm91z4.cloudfront.net/user_3KBHAgF7LaX57nRGEXpfZJOD80F/${id}.png&w=${w}&h=${w}&fit=cover&output=webp&q=82`;
+
+  const UZ = (ime) => `uzorci/${ime.toLowerCase()}.mp3`;
+  const DB_URL = "https://wnmamkiegcbzivvxdpdb.supabase.co";
+  const DB_KEY = "sb_publishable_xwyOOlLotEszvLIpwtTrHw_tGTBTtxF";
+
+  let FIRMA = null;
+
+  const GLASOVI = [
+    { ime: "Ana",     pol: "z", voiceId: "XaCskgVwqQJAGftiVqUu", img: "hf_20261122_111540_7b8fe6bf-01c1-4382-8656-f32b81f75e59" },
+    { ime: "Jelena",  pol: "z", voiceId: "lh36Leek4Xd9sIOyi4PK", img: "hf_20261122_111541_9e6b473d-1fef-4ec5-a34a-8b606a7e690e" },
+    { ime: "Milica",  pol: "z", voiceId: "XqtRAPQtU73gD8jJPNFu", img: "hf_20261122_111633_97425855-3aff-4381-a174-9e76063512ac" },
+    { ime: "Teodora", pol: "z", voiceId: "wEGSjWqn5mcySv95UYB0", img: "hf_20261122_111541_41edf78e-2670-4a86-b777-0cff66e6f5a8" },
+    { ime: "Marko",   pol: "m", voiceId: "P9dYqEwv9GnQr7yiXHEJ", img: "hf_20261122_111633_af950faa-c77b-4536-b5e9-a55b4393472a" },
+    { ime: "Nikola",  pol: "m", voiceId: "03JGG0q1N2U8MAW89yGN", img: "hf_20261122_111541_16744141-2daf-4298-a3b3-4cd5d0a8931c" },
+    { ime: "Stefan",  pol: "m", voiceId: "eGWWMAuCDy9HSXOXvFrW", img: "hf_20261122_111541_b72d69b4-3778-417d-ae1d-d8e8eee4a96d" },
+    { ime: "Luka",    pol: "m", voiceId: "xyu1t8F1limwgmk7yMTI", img: "hf_20261122_111541_df34685d-38a3-4c4f-aa70-71b367ba18bc" },
+    { ime: "Milan",   pol: "m", voiceId: "om56Yjircni4l6znlnik", img: "hf_20261122_111541_1fd9ea7c-af0b-42fe-af0f-c459384ed26f" },
+    { ime: "Aleksa",  pol: "m", voiceId: "vo8uYMQDdgCwyJNbs2M6", img: "hf_20261122_111633_b41b26bc-80dc-4faf-b7af-68d9ffe19f53" },
+    { ime: "Nemanja", pol: "m", voiceId: "GFCPEwNGOGWRy8L36mTz", img: "hf_20261122_111540_b1f8433d-478f-451c-a3c1-da9d028af55d" }
+  ];
+
+  // ---------- Pomoćne ----------
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const TEST = params.get("test") === "1";
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  let glas = GLASOVI[0];
+
+  // ---------- Tema ----------
+  $("themeBtn").addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("pr-theme", next); } catch (e) {}
+  });
+
+  // ---------- Firma (?f=slug iz baze) ----------
+  function renderFirma() {
+    document.title = `${FIRMA.ime} – Phone Receptionist`;
+    $("firmaIme").textContent = FIRMA.ime;
+    $("firmaMeta").textContent = [FIRMA.grad, FIRMA.delatnost].filter(Boolean).join(" · ");
+    $("endedTitle").textContent = `Želite ovakvog asistenta za ${FIRMA.ime}?`;
+    const subj = encodeURIComponent(`Phone Receptionist – ${FIRMA.ime}`);
+    $("ctaTop").href = `mailto:${CTA_MAIL}?subject=${subj}`;
+    $("ctaFoot").href = `mailto:${CTA_MAIL}?subject=${subj}`;
+    $("endedMail").href = `mailto:pavlecw@gmail.com?subject=${subj}`;
+  }
+  async function loadFirma() {
+    const slug = (params.get("f") || "").trim().toLowerCase();
+    if (!slug) return null;
+    try {
+      const r = await fetch(`${DB_URL}/rest/v1/firme?slug=eq.${encodeURIComponent(slug)}&aktivan=eq.true&select=slug,ime,delatnost,grad,podaci_firme`, { headers: { apikey: DB_KEY } });
+      const rows = await r.json();
+      return Array.isArray(rows) && rows[0] ? rows[0] : null;
+    } catch (e) { return null; }
+  }
+  function track(tip, extra = {}) {
+    if (TEST || !FIRMA) return;
+    try {
+      fetch(`${DB_URL}/rest/v1/dogadjaji`, { method: "POST", keepalive: true, headers: { apikey: DB_KEY, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ firma_slug: FIRMA.slug, tip, ...extra }) }).catch(() => {});
+    } catch (e) {}
+  }
+
+  // ---------- Izbor glasa ----------
+  const voicesEl = $("voices");
+  function renderVoices() {
+    voicesEl.innerHTML = "";
+    for (const g of GLASOVI) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "voice"; b.setAttribute("role", "radio");
+      b.dataset.pol = g.pol;
+      b.setAttribute("aria-checked", String(g === glas));
+      b.setAttribute("aria-label", `Izaberi glas ${g.ime}`);
+      b.innerHTML = `<span class="vimg"><img src="${IMG(g.img, 144)}" alt="" width="54" height="54" loading="lazy" decoding="async"><span class="spk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></span><span class="vname">${g.ime}</span>`;
+      b.addEventListener("click", () => selectVoice(g, true));
+      voicesEl.appendChild(b);
+    }
+  }
+  let sample = null, sampleOf = null;
+  function stopSample() { if (sample) { try { sample.pause(); } catch (e) {} } sample = null; sampleOf = null; [...voicesEl.children].forEach((el) => el.classList.remove("playing")); }
+  function playSample(g) {
+    if (sampleOf === g) { stopSample(); return; }
+    stopSample();
+    const a = new Audio(UZ(g.ime)); sample = a; sampleOf = g;
+    const el = voicesEl.children[GLASOVI.indexOf(g)]; el && el.classList.add("playing");
+    a.addEventListener("ended", () => { if (sample === a) stopSample(); });
+    a.addEventListener("error", () => { if (sample === a) stopSample(); });
+    a.play().catch(() => { if (sample === a) stopSample(); });
+  }
+  function selectVoice(g, fromClick) {
+    if (fromClick && (phase === "idle" || phase === "ended")) playSample(g);
+    glas = g;
+    [...voicesEl.children].forEach((el, i) => el.setAttribute("aria-checked", String(GLASOVI[i] === g)));
+    if (phase === "idle" || phase === "ended") $("status").innerHTML = `<span>Izabran glas: ${g.ime}</span>`;
+  }
+  document.querySelectorAll(".seg button").forEach((btn) => btn.addEventListener("click", () => {
+    document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === btn)));
+    const f = btn.dataset.f;
+    [...voicesEl.children].forEach((el) => { el.hidden = f !== "sve" && el.dataset.pol !== f; });
+  }));
+
+  // ---------- Poziv ----------
+  let Conversation = null;
+  let conv = null, phase = "idle", connected = false, startedAt = 0, tick = null, pendingVoice = null, attempt = null;
+  const stage = $("stage"), orbWrap = $("orbWrap");
+
+  function setPhase(p) {
+    phase = p;
+    stage.className = "stage state-" + (p === "ended" ? "idle" : p);
+    $("pickerWrap").hidden = p === "live" || p === "connecting";
+    document.querySelector(".seg").style.visibility = (p === "live" || p === "connecting") ? "hidden" : "visible";
+    $("orb").classList.toggle("busy", p !== "idle" && p !== "ended");
+    $("orb").setAttribute("aria-label", p === "live" ? `Razgovor sa ${glas.ime}` : "Pozovi");
+    $("timer").hidden = p !== "live";
+    $("endBtn").hidden = p !== "live";
+    $("switchBox").hidden = p !== "live";
+    $("ended").hidden = p !== "ended";
+    if (p !== "live") orbWrap.classList.remove("speaking");
+    if (p === "connecting") $("status").innerHTML = `<span>Povezivanje sa ${glas.ime}…</span>`;
+    if (p === "idle") $("status").innerHTML = `<span>Izabran glas: ${glas.ime}</span>`;
+    if (p === "ended") $("status").innerHTML = `<span>Poziv je završen</span>`;
+  }
+  function setMode(mode) {
+    if (phase !== "live") return;
+    const speaking = mode === "speaking";
+    orbWrap.classList.toggle("speaking", speaking);
+    $("status").innerHTML = speaking ? `<span class="live-dot"></span><span>${glas.ime} govori</span>` : `<span class="live-dot"></span><span>Sluša vas</span>`;
+  }
+  function showErr(t) { $("err").textContent = t; $("err").hidden = !t; }
+  function showInfo(t) { $("info").textContent = t; $("info").hidden = !t; }
+
+  function renderSwitch() {
+    const row = $("switchRow"); row.innerHTML = "";
+    for (const g of GLASOVI) {
+      if (g === glas) continue;
+      const b = document.createElement("button");
+      b.type = "button"; b.setAttribute("aria-label", `Prebaci na ${g.ime}`);
+      b.innerHTML = `<img src="${IMG(g.img, 64)}" alt="">${g.ime}`;
+      b.addEventListener("click", () => switchVoice(g));
+      row.appendChild(b);
+    }
+  }
+
+  async function loadSdk() {
+    if (Conversation) return Conversation;
+    const mod = await import("https://cdn.jsdelivr.net/npm/@elevenlabs/client/+esm");
+    Conversation = mod.Conversation;
+    return Conversation;
+  }
+
+  async function launch(a) {
+    attempt = a;
+    const C = await loadSdk();
+    const opts = {
+      agentId: AGENT_ID,
+      connectionType: a.connectionType,
+      dynamicVariables: {
+        ime_firme: FIRMA.ime, delatnost: FIRMA.delatnost || "", grad: FIRMA.grad || "",
+        podaci_firme: FIRMA.podaci_firme || "", ime_asistenta: glas.ime
+      },
+      onConnect: () => {
+        connected = true; startedAt = Date.now();
+        $("liveImg").src = IMG(glas.img, 352); $("liveImg").alt = glas.ime;
+        $("timer").textContent = "0:00";
+        setPhase("live"); setMode("listening"); renderSwitch();
+        setTimeout(() => { if ($("info").textContent.startsWith("Razgovor počinje")) showInfo(""); }, 3000);
+        track("poziv_pocet", { glas: glas.ime });
+        clearInterval(tick);
+        tick = setInterval(() => {
+          const s = Math.floor((Date.now() - startedAt) / 1000);
+          $("timer").textContent = fmt(s);
+          if (s >= MAX_SEC) { showInfo(`Demo poziv je ograničen na ${Math.round(MAX_SEC / 60)} minuta.`); stop(); }
+        }, 500);
+      },
+      onDisconnect: (d) => {
+        if (pendingVoice) { const next = pendingVoice; pendingVoice = null; glas = next; selectVoice(next); setPhase("connecting"); launch({ connectionType: "webrtc", withOverrides: true }); return; }
+        if (!connected) { if (d && d.reason === "error") fail(`${d.message || ""} ${d.closeReason || ""}`); return; }
+        finish();
+      },
+      onError: (m) => { if (!connected) fail(String(m)); },
+      onModeChange: (m) => setMode(m && m.mode)
+    };
+    if (a.withOverrides) opts.overrides = { tts: { voiceId: glas.voiceId } };
+    try {
+      conv = await C.startSession(opts);
+    } catch (e) {
+      fail(String(e && e.message || e));
+    }
+  }
+
+  let failing = false;
+  function fail(msg) {
+    const a = attempt;
+    if (!a || failing) return;
+    failing = true;
+    setTimeout(() => {
+      failing = false;
+      if (attempt !== a) return;
+      if (/override/i.test(msg) && a.withOverrides) return launch({ ...a, withOverrides: false });
+      if (a.connectionType === "webrtc") return launch({ ...a, connectionType: "websocket" });
+      attempt = null; setPhase("idle");
+      showErr("Povezivanje nije uspelo. Proverite internet vezu i pokušajte ponovo.");
+    }, 300);
+  }
+
+  function finish() {
+    if (!connected) return;
+    connected = false; clearInterval(tick);
+    const dur = Math.round((Date.now() - startedAt) / 1000);
+    track("poziv_zavrsen", { glas: glas.ime, trajanje_sekundi: dur });
+    setPhase("ended");
+  }
+
+  async function start() {
+    if (phase === "connecting" || phase === "live") return;
+    showErr(""); showInfo(""); stopSample();
+    setPhase("connecting");
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      s.getTracks().forEach((t) => t.stop());
+    } catch (e) {
+      setPhase("idle");
+      showErr("Nije moguće pristupiti mikrofonu. Dozvolite pristup mikrofonu u pregledaču i pokušajte ponovo.");
+      return;
+    }
+    connected = false;
+    launch({ connectionType: "webrtc", withOverrides: true });
+  }
+
+  async function stop() {
+    attempt = null;
+    const wasLive = connected;
+    try { await conv?.endSession(); } catch (e) {}
+    if (connected) finish(); else if (!wasLive) setPhase("idle");
+  }
+
+  async function switchVoice(next) {
+    if (!connected || pendingVoice) return;
+    showInfo(`Razgovor počinje ispočetka sa glasom ${next.ime}.`);
+    pendingVoice = next;
+    [...$("switchRow").children].forEach((b) => (b.disabled = true));
+    attempt = null;
+    finish();
+    setPhase("connecting");
+    try { await conv?.endSession(); } catch (e) {}
+  }
+
+  $("orb").addEventListener("click", () => { if (phase === "idle" || phase === "ended") start(); });
+  $("endBtn").addEventListener("click", stop);
+  $("againBtn").addEventListener("click", () => { showInfo(""); setPhase("idle"); });
+  window.addEventListener("pagehide", () => { try { conv?.endSession(); } catch (e) {} });
+
+  // ---------- Start ----------
+  renderVoices();
+  setPhase("idle");
+  FIRMA = await loadFirma();
+  if (!FIRMA) {
+    document.querySelector("main").innerHTML = '<div class="wrap" style="padding:80px 20px;text-align:center"><h1 style="font-size:32px">Demo nije pronađen</h1><p class="meta">Proverite link koji ste dobili ili se javite na trajkovicpavle5@gmail.com.</p></div>';
+  } else {
+    renderFirma();
+    track("otvoreno");
+  }
+  loadSdk().catch(() => {});
+</script>
+</body>
+</html>

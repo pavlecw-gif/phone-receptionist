@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin – Phone Receptionist</title>
+<style>
+  :root { --bg:#f4f3ef; --card:#fff; --b:#e1ded6; --t:#111; --m:#5b616c; --a:#e4500b; --ok:#16a34a; --r:#dc2626; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--t); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 18px 14px 60px; }
+  h1 { font-size: 22px; margin: 0 0 14px; }
+  h2 { font-size: 17px; margin: 0 0 10px; }
+  .card { background:var(--card); border:1px solid var(--b); border-radius:14px; padding:16px; margin-bottom:14px; }
+  label { display:block; font-size:13px; font-weight:600; color:var(--m); margin:10px 0 4px; }
+  input, textarea, select { width:100%; font:inherit; font-size:15px; padding:9px 11px; border:1px solid #ccc; border-radius:9px; background:#fff; }
+  textarea { min-height: 220px; resize: vertical; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; } .row > div { flex:1; min-width:180px; }
+  button { font:inherit; font-weight:600; padding:9px 14px; border-radius:9px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+  button.p { background:var(--a); color:#fff; border-color:var(--a); }
+  button.s { padding:5px 9px; font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--b); vertical-align:top; }
+  th { color:var(--m); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  .muted { color:var(--m); font-size:13px; }
+  .tabs { display:flex; gap:6px; margin:6px 0 10px; } .tabs button.on { background:#111; color:#fff; border-color:#111; }
+  .msg { padding:9px 12px; border-radius:9px; margin-top:10px; font-size:14px; }
+  .msg.ok { background:#e8f6ec; color:var(--ok); } .msg.err { background:#fde8e8; color:var(--r); }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; background:#eee; }
+  .pill.on { background:#e8f6ec; color:var(--ok); }
+  .scroll { overflow-x:auto; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Phone Receptionist – admin</h1>
+
+  <div class="card" id="loginBox" hidden>
+    <h2>Prijava</h2>
+    <form id="loginForm">
+      <label>Mejl</label><input id="email" type="email" autocomplete="username" required>
+      <label>Lozinka</label><input id="pass" type="password" autocomplete="current-password" required>
+      <div style="margin-top:12px"><button class="p" type="submit">Prijavi se</button></div>
+      <div id="loginMsg"></div>
+    </form>
+  </div>
+
+  <div id="app" hidden>
+    <div class="row" style="align-items:center;margin-bottom:10px">
+      <div class="muted" id="who"></div>
+      <div style="flex:0"><button id="logout">Odjava</button></div>
+    </div>
+
+    <div class="card">
+      <h2 id="formTitle">Novi demo</h2>
+      <div class="tabs">
+        <button type="button" data-m="brief" class="on">Brief (nema sajt)</button>
+        <button type="button" data-m="link">Link sajta</button>
+      </div>
+      <p class="muted" id="modeHint">Nalepi odgovore iz briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.</p>
+      <form id="firmForm">
+        <div class="row">
+          <div><label>Ime firme</label><input id="f_ime" required></div>
+          <div><label>Kratko ime za link (slug)</label><input id="f_slug" placeholder="npr. auto-centar-radic" required pattern="[a-z0-9-]+"></div>
+        </div>
+        <div class="row">
+          <div><label>Delatnost</label><input id="f_del" placeholder="npr. auto servis i šlep služba"></div>
+          <div><label>Grad</label><input id="f_grad"></div>
+        </div>
+        <label>Sajt</label><input id="f_sajt" type="url" placeholder="https://...">
+        <label>Podaci o firmi (ovo agent zna)</label>
+        <textarea id="f_pod" placeholder="O firmi: ...&#10;Radno vreme: ...&#10;Usluge i cene: ...&#10;Adresa i kontakt: ...&#10;Napomene: ..."></textarea>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600;color:var(--t)"><input id="f_akt" type="checkbox" style="width:auto" checked> Demo je aktivan (link radi)</label>
+        <div class="row" style="margin-top:12px">
+          <div style="flex:0;display:flex;gap:8px">
+            <button class="p" type="submit" id="saveBtn">Sačuvaj demo</button>
+            <button type="button" id="resetBtn">Novo / poništi</button>
+          </div>
+        </div>
+        <div id="formMsg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Demoi</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Firma</th><th>Otvorio</th><th>Pozivi</th><th>Poslednje</th><th>Status</th><th></th></tr></thead>
+        <tbody id="firmRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>Poslednji događaji</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Vreme</th><th>Firma</th><th>Šta</th><th>Glas</th><th>Trajanje</th></tr></thead>
+        <tbody id="evRows"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  const sb = createClient("https://wnmamkiegcbzivvxdpdb.supabase.co", "sb_publishable_xwyOOlLotEszvLIpwtTrHw_tGTBTtxF");
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const BASE = location.href.replace(/admin\.html.*$/, "");
+  const fmtT = (t) => new Date(t).toLocaleString("sr-RS", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+  const fmtD = (s) => s == null ? "" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const TIP = { otvoreno: "otvorio stranicu", poziv_pocet: "počeo poziv", poziv_zavrsen: "završio poziv" };
+  let firme = [], editing = null;
+
+  function msg(el, text, ok) { $(el).innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+  function slugify(s) {
+    const map = { č: "c", ć: "c", š: "s", ž: "z", đ: "dj" };
+    return s.toLowerCase().replace(/[čćšžđ]/g, (c) => map[c]).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  async function show() {
+    const { data: { session } } = await sb.auth.getSession();
+    $("loginBox").hidden = !!session; $("app").hidden = !session;
+    if (session) { $("who").textContent = "Prijavljen: " + session.user.email; await load(); }
+  }
+
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); msg("loginMsg", "");
+    const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pass").value });
+    if (error) msg("loginMsg", "Prijava nije uspela: " + error.message); else show();
+  });
+  $("logout").onclick = async () => { await sb.auth.signOut(); show(); };
+
+  document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
+    document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("on", x === b));
+    $("modeHint").textContent = b.dataset.m === "link"
+      ? "Upiši sajt firme i pošalji link Claude-u u četu: on pročita sajt i vrati sređene podatke, koje nalepiš ispod (ili ih on upiše direktno)."
+      : "Nalepi odgovore iz briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.";
+  });
+  $("f_ime").addEventListener("input", () => { if (!editing) $("f_slug").value = slugify($("f_ime").value); });
+
+  function resetForm() {
+    editing = null; $("firmForm").reset(); $("f_akt").checked = true;
+    $("formTitle").textContent = "Novi demo"; $("f_slug").disabled = false; msg("formMsg", "");
+  }
+  $("resetBtn").onclick = resetForm;
+
+  $("firmForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); msg("formMsg", "");
+    const row = {
+      ime: $("f_ime").value.trim(), slug: $("f_slug").value.trim(), delatnost: $("f_del").value.trim() || null,
+      grad: $("f_grad").value.trim() || null, sajt: $("f_sajt").value.trim() || null,
+      podaci_firme: $("f_pod").value.trim() || null, aktivan: $("f_akt").checked,
+    };
+    const q = editing ? sb.from("firme").update(row).eq("id", editing) : sb.from("firme").insert(row);
+    const { error } = await q;
+    if (error) return msg("formMsg", "Nije sačuvano: " + error.message);
+    msg("formMsg", "Sačuvano. Link: " + BASE + "?f=" + row.slug, true);
+    if (!editing) { editing = null; }
+    await load();
+  });
+
+  window.editFirm = (id) => {
+    const f = firme.find((x) => x.id === id); if (!f) return;
+    editing = id; $("formTitle").textContent = "Izmena: " + f.ime;
+    $("f_ime").value = f.ime; $("f_slug").value = f.slug; $("f_slug").disabled = true;
+    $("f_del").value = f.delatnost || ""; $("f_grad").value = f.grad || ""; $("f_sajt").value = f.sajt || "";
+    $("f_pod").value = f.podaci_firme || ""; $("f_akt").checked = f.aktivan; msg("formMsg", "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  window.copyLink = async (slug, btn) => {
+    const url = BASE + "?f=" + slug;
+    try { await navigator.clipboard.writeText(url); btn.textContent = "Kopirano"; } catch (e) { btn.textContent = url; }
+    setTimeout(() => btn.textContent = "Kopiraj link", 2000);
+  };
+
+  async function load() {
+    const [{ data: f, error: e1 }, { data: ev, error: e2 }] = await Promise.all([
+      sb.from("firme").select("*").order("created_at", { ascending: false }),
+      sb.from("dogadjaji").select("*").order("created_at", { ascending: false }).limit(1000),
+    ]);
+    if (e1 || e2) { $("firmRows").innerHTML = `<tr><td colspan="6">Greška: ${esc((e1 || e2).message)}</td></tr>`; return; }
+    firme = f || [];
+    const st = {};
+    for (const x of ev || []) {
+      const s = st[x.firma_slug] ||= { o: 0, p: 0, last: null };
+      if (x.tip === "otvoreno") s.o++; if (x.tip === "poziv_pocet") s.p++;
+      if (!s.last) s.last = x.created_at;
+    }
+    $("firmRows").innerHTML = firme.map((x) => {
+      const s = st[x.slug] || { o: 0, p: 0, last: null };
+      return `<tr><td><b>${esc(x.ime)}</b><div class="muted">${esc(x.grad || "")}${x.delatnost ? " · " + esc(x.delatnost) : ""}</div><div class="muted">?f=${esc(x.slug)}</div></td>
+        <td>${s.o}</td><td>${s.p}</td><td class="muted">${s.last ? fmtT(s.last) : "—"}</td>
+        <td><span class="pill ${x.aktivan ? "on" : ""}">${x.aktivan ? "aktivan" : "ugašen"}</span></td>
+        <td style="white-space:nowrap"><button class="s" onclick="copyLink('${esc(x.slug)}', this)">Kopiraj link</button> <button class="s" onclick="editFirm('${x.id}')">Izmeni</button></td></tr>`;
+    }).join("") || `<tr><td colspan="6" class="muted">Još nema demoa.</td></tr>`;
+    const byS = Object.fromEntries(firme.map((x) => [x.slug, x.ime]));
+    $("evRows").innerHTML = (ev || []).slice(0, 100).map((x) => `<tr><td class="muted">${fmtT(x.created_at)}</td><td>${esc(byS[x.firma_slug] || x.firma_slug)}</td><td>${TIP[x.tip] || esc(x.tip)}</td><td>${esc(x.glas || "")}</td><td>${fmtD(x.trajanje_sekundi)}</td></tr>`).join("") || `<tr><td colspan="5" class="muted">Još nema događaja.</td></tr>`;
+  }
+
+  sb.auth.onAuthStateChange(() => {});
+  show();
+</script>
+</body>
+</html>
