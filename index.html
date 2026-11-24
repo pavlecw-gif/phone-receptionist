@@ -332,7 +332,11 @@
   // ---------- Pomoćne ----------
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
-  const TEST = params.get("test") === "1";
+  // Test agenti (npr. ?agent=rt za Realtime probu); uvek bez pracenja
+  const TEST_AGENTI = { rt: "agent_3801m876syx2e7sszeyh8p7cx4ww" };
+  const AGENT_TEST = TEST_AGENTI[params.get("agent")] || null;
+  const AGENT_AKTIVAN = AGENT_TEST || AGENT_ID;
+  const TEST = params.get("test") === "1" || !!AGENT_TEST;
   const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   let glas = GLASOVI[0];
 
@@ -462,7 +466,7 @@
     attempt = a;
     const C = await loadSdk();
     const opts = {
-      agentId: AGENT_ID,
+      agentId: AGENT_AKTIVAN,
       connectionType: a.connectionType,
       dynamicVariables: {
         ime_firme: FIRMA.ime, delatnost: FIRMA.delatnost || "", grad: FIRMA.grad || "",
