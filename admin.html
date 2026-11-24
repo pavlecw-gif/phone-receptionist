@@ -32,6 +32,7 @@
   nav.tabs::-webkit-scrollbar { display:none; }
   nav.tabs button { background:transparent; border:1px solid transparent; color:var(--m); padding:7px 12px; border-radius:999px; font-weight:650; white-space:nowrap; }
   nav.tabs button.on { background:var(--card2); color:var(--t); border-color:var(--b); }
+  @media (max-width:640px){ header .in { flex-wrap:wrap; row-gap:8px; } header .brand { flex:1; } nav.tabs { order:3; flex-basis:100%; } nav.tabs button { flex:1; } }
   .icon { background:var(--card); border:1px solid var(--b); color:var(--t); border-radius:10px; width:36px; height:36px; display:grid; place-items:center; padding:0; flex:none; }
   h1 { font-size:22px; margin:18px 0 4px; letter-spacing:-.01em; }
   h2 { font-size:16px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
