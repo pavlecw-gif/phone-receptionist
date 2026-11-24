@@ -427,7 +427,7 @@
     Object.assign(l, patch, { updated_at: new Date().toISOString() });
     await sb.from("aktivnosti").insert({ lead_id: l.id, tip: "poziv", status, interesovanje: l.interesovanje });
     toast(patch.sledeci_poziv ? `Sačuvano · ponovo zovi ${fmtDan(patch.sledeci_poziv)}` : "Sačuvano");
-    rerender();
+    rerender(); if (openId === l.id && status === "Nije zainteresovan" && !document.querySelector('#pForm [name="razlog_odbijanja"]')) renderPanel();
   }
   async function setInt(id, v) {
     const l = leads.find((x) => x.id == id); if (!l) return;
@@ -436,7 +436,7 @@
     if (error) { toast("Nije sačuvano: " + error.message); return; }
     l.interesovanje = nv; toast(nv ? `Interesovanje: ${nv} – ${INT[nv]}` : "Interesovanje obrisano"); rerender();
   }
-  function rerender() { if (view === "pozivi") renderPozivi(); if (view === "danas") renderDanas(); if (openId) renderPanel(); }
+  function rerender() { if (view === "pozivi") renderPozivi(); if (view === "danas") renderDanas(); if (openId) refreshPanelTop(); }
 
   document.addEventListener("change", (e) => { const s = e.target.closest("[data-st]"); if (s) setStatus(s.dataset.st, s.value); });
   document.addEventListener("click", (e) => {
@@ -451,6 +451,20 @@
   $("pClose").onclick = closePanel; $("ov").onclick = closePanel;
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId !== null) closePanel(); });
 
+  const panelTop = (l) => `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 4px">${callBtn(l)}${statusSel(l)}</div>
+      <div style="margin:8px 0 2px">${dots(l)} <span class="muted">interesovanje</span></div>`;
+  const histHtml = (hist) => hist.map((h) => `<li>${h.tip === "poziv" ? `Status: <span class="pill st-${stIdx(h.status)}">${esc(h.status)}</span>${h.interesovanje ? ` · interesovanje ${h.interesovanje}` : ""}` : esc(h.tekst || h.tip)}<span class="muted">${fmtT(h.created_at)}${h.autor && h.autor !== me.email ? " · " + esc(h.autor) : ""}</span></li>`).join("") || `<li class="muted">Još nema zapisa.</li>`;
+  async function refreshHist(id) {
+    const { data } = await sb.from("aktivnosti").select("*").eq("lead_id", id).order("created_at", { ascending: false }).limit(100);
+    if ($("pHist") && openId === id) $("pHist").innerHTML = histHtml(data || []);
+  }
+  function refreshPanelTop() {
+    const l = leads.find((x) => x.id === openId);
+    if (!l || !$("pTop")) return;
+    $("pTop").innerHTML = panelTop(l);
+    const sp = document.querySelector('#pForm [name="sledeci_poziv"]'); if (sp) sp.value = l.sledeci_poziv || "";
+    refreshHist(l.id);
+  }
   async function renderPanel() {
     const isNew = openId === 0;
     const l = isNew ? { id: 0, firma: "", status: "Nije zvano", vlasnik: isAdmin() ? "pavle" : "partner" } : leads.find((x) => x.id === openId);
@@ -463,8 +477,7 @@
     const ds = demo ? demoStat(demo.slug) : null;
     const convs = demo ? ev.filter((x) => x.firma_slug === demo.slug && x.tip === "poziv_zavrsen" && x.conversation_id).slice(0, 5) : [];
     $("pBody").innerHTML = `
-      ${isNew ? "" : `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 4px">${callBtn(l)}${statusSel(l)}</div>
-      <div style="margin:8px 0 2px">${dots(l)} <span class="muted">interesovanje</span></div>`}
+      ${isNew ? "" : `<div id="pTop">${panelTop(l)}</div>`}
       <form id="pForm">
         ${isNew ? `<label>Ime firme</label><input name="firma" required>` : ""}
         <div class="row">
@@ -506,7 +519,7 @@
 
       ${isNew ? "" : `<div class="card" style="margin-top:12px"><h2>Istorija</h2>
         <div class="row"><input id="noteIn" placeholder="Dodaj belešku u istoriju…"><div style="flex:0"><button type="button" id="noteBtn">Dodaj</button></div></div>
-        <ul class="hist" style="margin-top:8px">${hist.map((h) => `<li>${h.tip === "poziv" ? `Status: <span class="pill st-${stIdx(h.status)}">${esc(h.status)}</span>${h.interesovanje ? ` · interesovanje ${h.interesovanje}` : ""}` : esc(h.tekst || h.tip)}<span class="muted">${fmtT(h.created_at)}${h.autor && h.autor !== me.email ? " · " + esc(h.autor) : ""}</span></li>`).join("") || `<li class="muted">Još nema zapisa.</li>`}</ul>
+        <ul class="hist" id="pHist" style="margin-top:8px">${histHtml(hist)}</ul>
       </div>`}
     `;
     $("pForm").onsubmit = async (e) => {
@@ -519,7 +532,7 @@
         if (!isAdmin()) fd.vlasnik = "partner";
         const { data, error } = await sb.from("leadovi").insert(fd).select().single();
         if (error) return msg("pMsg", "Nije sačuvano: " + error.message);
-        leads.push(data); openId = data.id; fillFilters(); toast("Firma dodata"); rerender(); return;
+        leads.push(data); openId = data.id; fillFilters(); toast("Firma dodata"); rerender(); renderPanel(); return;
       }
       const { error } = await sb.from("leadovi").update(fd).eq("id", l.id);
       if (error) return msg("pMsg", "Nije sačuvano: " + error.message);
@@ -530,7 +543,7 @@
         const t = $("noteIn").value.trim(); if (!t) return;
         const { error } = await sb.from("aktivnosti").insert({ lead_id: l.id, tip: "beleska", tekst: t });
         if (error) return toast("Nije sačuvano: " + error.message);
-        renderPanel();
+        $("noteIn").value = ""; refreshHist(l.id);
       };
       $("noteIn").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); $("noteBtn").click(); } };
     }
