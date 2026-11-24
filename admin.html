@@ -145,6 +145,7 @@
     <div class="stats" id="stats"></div>
     <div class="grid">
       <div class="card"><h2>Pozovi danas <span class="n" id="nDue">0</span></h2><div id="dueList"></div></div>
+      <div class="card" data-admin><h2>Novi briefovi <span class="n" id="nBrief">0</span></h2><div id="briefList"></div></div>
       <div class="card" data-admin><h2>Demo bez odgovora 3+ dana <span class="n" id="nStale">0</span></h2><div id="staleList"></div></div>
       <div class="card" data-admin><h2>Aktivnost na demo stranicama, 48 h</h2><div id="demoAct"></div></div>
       <div class="card"><h2>Sledeći na listi</h2><p class="muted" style="margin:-4px 0 6px">Nezvane firme, prvo visok prioritet.</p><div id="nextList"></div></div>
@@ -247,7 +248,7 @@
   const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
 
   let me = { email: "", uloga: "admin", ime: "Pavle" };
-  let leads = [], firme = [], ev = [], view = "danas";
+  let leads = [], firme = [], ev = [], briefs = [], view = "danas";
 
   // ---------- pomoćne ----------
   const dan = (d = new Date()) => d.toLocaleDateString("sv-SE");
@@ -311,14 +312,15 @@
     if (isAdmin()) {
       q.push(sb.from("firme").select("*").order("created_at", { ascending: false }));
       q.push(sb.from("dogadjaji").select("*").order("created_at", { ascending: false }).limit(2000));
+      q.push(sb.from("briefovi").select("*").order("created_at", { ascending: false }).limit(1000));
     }
     const r = await Promise.all(q);
-    const err = r.find((x) => x.error);
+    const err = r.slice(0, 3).find((x) => x.error);
     if (err) {
       const m = /leadovi|korisnici|aktivnosti/.test(err.error.message) ? "Tabele za pozive još nisu napravljene u bazi (pokreni SQL za korak 1)." : err.error.message;
       toast("Greška: " + m);
     }
-    leads = r[0].data || []; firme = (r[1] && r[1].data) || []; ev = (r[2] && r[2].data) || [];
+    leads = r[0].data || []; firme = (r[1] && r[1].data) || []; ev = (r[2] && r[2].data) || []; briefs = (r[3] && !r[3].error && r[3].data) || [];
     fillFilters();
   }
   const demoStat = (slug) => {
@@ -330,6 +332,48 @@
     }
     return s;
   };
+
+  // ---------- BRIEF ----------
+  const briefOf = (id) => briefs.find((b) => b.lead_id === id);
+  const briefLink = (l) => l.brief_token ? BASE + "brief.html?b=" + l.brief_token : "";
+  const briefPoruka = (l) => `Dobar dan, ovde Pavle (Phone Receptionist). Da bi asistent na demou zvučao kao da radi kod vas, popunite ovaj kratak upitnik. Traje oko 2 minuta, većinu stvari samo dodirnete:\n${briefLink(l)}\n\nČim stigne, šaljem vam link gde možete da ga pozovete i čujete kako zvuči.\n\nPozdrav, Pavle`;
+  function briefText(o) {
+    const rv = o.radno_vreme || {};
+    const dan = (k, n) => rv[k] ? `${n} ${rv[k]}` : "";
+    const L = [];
+    L.push(`O firmi: ${o.naziv || ""}${o.opis ? ", " + o.opis : ""}.`);
+    const r = [dan("pon-pet", "ponedeljak do petak"), dan("subota", "subota"), dan("nedelja", "nedelja")].filter(Boolean).join("; ");
+    if (r) L.push(`Radno vreme: ${r}.`);
+    if (o.adresa) L.push(`Adresa: ${o.adresa}.`);
+    if ((o.usluge || []).length) {
+      L.push(`Usluge${o.cene_na_upit ? "" : " i okvirne cene (uvek naglasi da su okvirne)"}:`);
+      for (const u of o.usluge) L.push(`- ${u.usluga}${u.cena ? ": " + u.cena + (/din|€|eur|rsd/i.test(u.cena) ? "" : " dinara") : ""}`);
+    }
+    if (o.cene_na_upit) L.push("Cene: ne govori cene preko telefona; uzmi kontakt i reci da će ih kolega javiti.");
+    if ((o.pitanja || []).length) L.push(`Mušterije najčešće pitaju: ${o.pitanja.join("; ")}.`);
+    L.push(`Od onoga ko zove uzmi: ime, broj telefona${(o.uzeti || []).length ? ", " + o.uzeti.join(", ").toLowerCase() : ""}.`);
+    if ((o.ne_sme || []).length) L.push(`Nikako ne obećavaj i ne govori: ${o.ne_sme.join(", ").toLowerCase()}.`);
+    if (o.napomena) L.push(`Napomene: ${o.napomena}`);
+    return L.join("\n");
+  }
+  function briefHtml(b) {
+    const o = b.odgovori || {}, rv = o.radno_vreme || {};
+    const li = (a) => (a || []).map((x) => `<li>${esc(x)}</li>`).join("");
+    return `<div class="muted" style="margin-bottom:6px">Popunjeno ${fmtT(b.created_at)}${o.kontakt_ime ? " · " + esc(o.kontakt_ime) : ""}${o.kontakt_tel ? " · " + esc(o.kontakt_tel) : ""}</div>
+      <div style="font-size:14px;line-height:1.5">
+        <b>${esc(o.naziv)}</b>${o.opis ? " – " + esc(o.opis) : ""}<br>
+        ${esc(o.adresa || "")}<br>
+        Pon–pet: ${esc(rv["pon-pet"] || "—")} · Sub: ${esc(rv.subota || "—")} · Ned: ${esc(rv.nedelja || "—")}
+        <div style="margin-top:6px"><b>Usluge${o.cene_na_upit ? " (cene samo na upit)" : ""}:</b><ul style="margin:4px 0 0 18px;padding:0">${(o.usluge || []).map((u) => `<li>${esc(u.usluga)}${u.cena ? " – " + esc(u.cena) : ""}</li>`).join("")}</ul></div>
+        ${(o.pitanja || []).length ? `<div style="margin-top:6px"><b>Pitaju:</b><ul style="margin:4px 0 0 18px;padding:0">${li(o.pitanja)}</ul></div>` : ""}
+        ${(o.uzeti || []).length ? `<div style="margin-top:6px"><b>Zapisati:</b> ${esc(o.uzeti.join(", "))}</div>` : ""}
+        ${(o.ne_sme || []).length ? `<div style="margin-top:6px"><b>Ne sme:</b> ${esc(o.ne_sme.join(", "))}</div>` : ""}
+        ${o.napomena ? `<div style="margin-top:6px"><b>Napomena:</b> ${esc(o.napomena)}</div>` : ""}
+      </div>`;
+  }
+  async function copyText(t, ok) {
+    try { await navigator.clipboard.writeText(t); toast(ok); } catch (e) { prompt("Kopiraj:", t); }
+  }
 
   // ---------- DANAS ----------
   function renderDanas() {
@@ -353,6 +397,10 @@
       || `<div class="empty">Nema zakazanih poziva za danas. Kad staviš „Nije se javio“, „Vlasnik nije tu“ ili „Pozvati ponovo“, firma se ovde vraća.</div>`;
 
     if (isAdmin()) {
+      const nb = briefs.filter((b) => !b.procitan);
+      $("nBrief").textContent = nb.length;
+      $("briefList").innerHTML = nb.map((b) => { const l = leads.find((x) => x.id === b.lead_id); return l ? miniRow(l, `<span class="muted">popunio ${fmtT(b.created_at)}</span>`) : ""; }).join("")
+        || `<div class="empty">Nema novih popunjenih briefova.</div>`;
       const lim = Date.now() - 3 * 864e5;
       const stale = leads.filter((l) => l.status === "Zakazan demo" && new Date(l.updated_at).getTime() < lim);
       $("nStale").textContent = stale.length;
@@ -413,7 +461,7 @@
         ${l.napomena ? `<div class="meta" style="color:var(--t);opacity:.85">${esc(l.napomena.length > 140 ? l.napomena.slice(0, 140) + "…" : l.napomena)}</div>` : ""}
       </div>
       <div>${callBtn(l)}</div>
-      <div class="acts">${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}</div>
+      <div class="acts">${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}${isAdmin() && briefOf(l.id) ? `<span class="pill st-8">brief</span>` : ""}</div>
     </div>`).join("") || `<div class="empty" style="padding:14px 0">Nema firmi za ovaj filter.</div>`;
   }
 
@@ -508,7 +556,11 @@
         <div id="pMsg"></div>
       </form>
 
-      ${isNew || !isAdmin() ? "" : `<div class="card" style="margin-top:16px"><h2>Demo</h2>
+      ${isNew || !isAdmin() ? "" : (() => { const b = briefOf(l.id); return `<div class="card" style="margin-top:16px"><h2>Kratki brief ${b ? `<span class="pill st-8">popunjen</span>` : `<span class="pill st-0">nije popunjen</span>`}</h2>
+        ${l.brief_token ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:${b ? "12px" : "0"}"><button class="s p" type="button" id="copyMsg">Kopiraj poruku sa linkom</button><button class="s" type="button" id="copyBrief">Kopiraj samo link</button><a class="btn s" href="${briefLink(l)}" target="_blank" rel="noopener">Otvori formu</a></div>` : `<p class="muted">Pokreni SQL za brief da bi firma dobila link.</p>`}
+        ${b ? briefHtml(b) + `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${l.demo_slug ? `<button class="s" type="button" id="briefToDemo">Prebaci u postojeći demo</button>` : `<button class="s p" type="button" id="briefToDemo">Napravi demo iz briefa</button>`}<button class="s" type="button" id="copyBriefText">Kopiraj kao tekst</button></div>` : ""}
+      </div>`; })()}
+      ${isNew || !isAdmin() ? "" : `<div class="card" style="margin-top:12px"><h2>Demo</h2>
         ${demo ? `<div><b>${esc(demo.ime)}</b> <span class="pill ${demo.aktivan ? "st-8" : "st-0"}">${demo.aktivan ? "aktivan" : "ugašen"}</span></div>
           <div class="muted" style="margin:4px 0 8px">${ds.o}× otvoren · ${ds.p}× pozvan${ds.sec ? " · ukupno " + fmtD(ds.sec) : ""}${ds.last ? " · poslednje " + fmtT(ds.last) : ""}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" data-copy="${esc(demo.slug)}">Kopiraj link</button><a class="btn s" href="${BASE}?f=${encodeURIComponent(demo.slug)}&test=1" target="_blank" rel="noopener">Otvori (test)</a><button class="s" type="button" id="editDemo">Izmeni podatke</button></div>
@@ -556,6 +608,18 @@
     };
     if ($("makeDemo")) $("makeDemo").onclick = () => { pendingLead = l; closePanel(); go("demo"); prefillDemo(l); };
     if ($("editDemo")) $("editDemo").onclick = () => { closePanel(); go("demo"); editFirm(demo.id); };
+    if ($("copyMsg")) $("copyMsg").onclick = () => copyText(briefPoruka(l), "Poruka sa linkom je kopirana. Nalepi je u Viber, WhatsApp ili SMS.");
+    if ($("copyBrief")) $("copyBrief").onclick = () => copyText(briefLink(l), "Link za brief je kopiran.");
+    const bb = briefOf(l.id);
+    if (bb && !bb.procitan) { bb.procitan = true; sb.from("briefovi").update({ procitan: true }).eq("id", bb.id).then(() => {}); }
+    if ($("copyBriefText")) $("copyBriefText").onclick = () => copyText(briefText(bb.odgovori || {}), "Brief je kopiran kao tekst.");
+    if ($("briefToDemo")) $("briefToDemo").onclick = () => {
+      const o = bb.odgovori || {};
+      if (demo) { closePanel(); go("demo"); editFirm(demo.id); $("f_pod").value = briefText(o); msg("formMsg", "Podaci iz briefa su ubačeni. Pregledaj i klikni Sačuvaj demo.", true); return; }
+      pendingLead = l; closePanel(); go("demo"); prefillDemo(l);
+      if (o.naziv) { $("f_ime").value = o.naziv; $("f_slug").value = slugify(o.naziv); }
+      $("f_pod").value = briefText(o);
+    };
   }
   $("newLead").onclick = () => openLead(0);
   document.addEventListener("click", async (e) => {

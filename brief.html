@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0f0d">
+<title>Kratki upitnik – Phone Receptionist</title>
+<style>
+  :root { --bg:#0b0f0d; --card:#141b17; --card2:#1a231e; --b:#26332c; --t:#e8efe9; --m:#93a199; --a:#22c55e; --a2:#4ade80; --ai:#04140a; --r:#f87171; --in:#0f1512; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f3f5f2; --card:#fff; --card2:#f4f7f3; --b:#dde4dc; --t:#101512; --m:#5c6760; --a:#16a34a; --a2:#15803d; --ai:#fff; --r:#dc2626; --in:#fff; }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--t); font-size:16px; line-height:1.45; }
+  .wrap { max-width:640px; margin:0 auto; padding:18px 16px 120px; }
+  .brand { font-weight:800; font-size:14px; color:var(--m); letter-spacing:.02em; }
+  .brand span { color:var(--a); }
+  h1 { font-size:25px; line-height:1.2; margin:14px 0 8px; letter-spacing:-.015em; }
+  .lead { color:var(--m); margin:0 0 18px; }
+  .bar { position:sticky; top:0; z-index:5; background:var(--bg); padding:10px 0 12px; }
+  .bar .track { height:6px; background:var(--card2); border-radius:9px; overflow:hidden; }
+  .bar .fill { height:100%; width:0; background:var(--a); border-radius:9px; transition:width .3s; }
+  .bar .txt { font-size:12.5px; color:var(--m); margin-top:6px; }
+  .q { background:var(--card); border:1px solid var(--b); border-radius:18px; padding:16px; margin-bottom:14px; }
+  .q h2 { font-size:17px; margin:0 0 4px; display:flex; gap:10px; align-items:baseline; }
+  .q h2 .num { flex:none; width:26px; height:26px; border-radius:50%; background:var(--card2); border:1px solid var(--b); display:grid; place-items:center; font-size:13px; color:var(--m); }
+  .q.done h2 .num { background:var(--a); border-color:var(--a); color:var(--ai); }
+  .hint { color:var(--m); font-size:14px; margin:0 0 10px; }
+  label.l { display:block; font-size:13px; font-weight:650; color:var(--m); margin:10px 0 4px; }
+  input, textarea { width:100%; font:inherit; font-size:16px; padding:11px 12px; border:1px solid var(--b); border-radius:12px; background:var(--in); color:var(--t); }
+  input:focus, textarea:focus { outline:2px solid color-mix(in srgb, var(--a) 55%, transparent); border-color:var(--a); }
+  textarea { min-height:80px; resize:vertical; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { font:inherit; font-size:14.5px; padding:8px 13px; border-radius:999px; border:1px solid var(--b); background:var(--card2); color:var(--t); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .chip.on { background:color-mix(in srgb, var(--a) 18%, transparent); border-color:var(--a); color:var(--a2); font-weight:650; }
+  .chip.on::before { content:"✓ "; }
+  .add { display:flex; gap:8px; margin-top:10px; }
+  .add input { flex:1; }
+  .add button, .btn2 { font:inherit; font-weight:650; padding:10px 14px; border-radius:12px; border:1px solid var(--b); background:var(--card2); color:var(--t); }
+  .hours { display:grid; grid-template-columns:100px 1fr auto; gap:8px; align-items:center; }
+  .hours span { font-weight:650; font-size:14.5px; }
+  .hours label { font-size:13px; color:var(--m); display:flex; gap:5px; align-items:center; white-space:nowrap; }
+  .hours input[type=checkbox], .tog input { width:18px; height:18px; accent-color:var(--a); }
+  .prices { display:grid; gap:8px; margin-top:10px; }
+  .prices .pr { display:grid; grid-template-columns:1fr 130px; gap:8px; align-items:center; }
+  .prices .pr span { font-size:14.5px; }
+  .tog { display:flex; gap:8px; align-items:center; font-size:14.5px; margin-top:6px; }
+  .send { position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, var(--bg) 30%); z-index:6; }
+  .send button { display:block; width:100%; max-width:608px; margin:0 auto; font:inherit; font-size:17px; font-weight:750; padding:15px; border-radius:14px; border:0; background:var(--a); color:var(--ai); }
+  .send button:disabled { opacity:.6; }
+  .err { color:var(--r); font-size:14px; margin-top:8px; text-align:center; }
+  .center { text-align:center; padding:60px 10px; }
+  .center .ok { width:64px; height:64px; border-radius:50%; background:var(--a); color:var(--ai); display:grid; place-items:center; font-size:34px; margin:0 auto 14px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Phone <span>Receptionist</span></div>
+
+  <div id="loading" class="center"><p class="hint">Učitavam…</p></div>
+  <div id="bad" class="center" hidden><h1>Link nije ispravan</h1><p class="hint">Proverite da li ste otvorili ceo link iz poruke, ili se javite Pavlu.</p></div>
+  <div id="thanks" class="center" hidden>
+    <div class="ok">✓</div>
+    <h1>Hvala, stiglo je!</h1>
+    <p class="hint">Pravim asistenta sa vašim podacima. Javiću vam se sa linkom gde možete da ga pozovete i čujete kako zvuči.</p>
+    <p class="hint">Pozdrav, Pavle</p>
+  </div>
+
+  <form id="form" hidden novalidate>
+    <h1 id="title">Kratki upitnik</h1>
+    <p class="lead">Da bi asistent na demou zvučao kao da radi kod vas. Traje oko 2 minuta. Većinu stvari samo dodirnete, a gde nešto ne znate, slobodno preskočite.</p>
+
+    <div class="bar"><div class="track"><div class="fill" id="fill"></div></div><div class="txt" id="barTxt">0 od 7</div></div>
+
+    <section class="q" data-q="1">
+      <h2><span class="num">1</span>Naziv firme i čime se bavite</h2>
+      <p class="hint">Ispravite ako nešto nije tačno.</p>
+      <label class="l">Naziv firme</label><input id="naziv" autocomplete="organization">
+      <label class="l">Čime se bavite, jednom rečenicom</label><input id="opis">
+    </section>
+
+    <section class="q" data-q="2">
+      <h2><span class="num">2</span>Adresa i radno vreme</h2>
+      <label class="l">Adresa</label><input id="adresa" autocomplete="street-address">
+      <label class="l">Radno vreme</label>
+      <div class="hours">
+        <span>Pon – pet</span><input id="h1" placeholder="npr. 8–17"><label><input type="checkbox" id="x1"> ne radimo</label>
+        <span>Subota</span><input id="h2" placeholder="npr. 8–13"><label><input type="checkbox" id="x2"> ne radimo</label>
+        <span>Nedelja</span><input id="h3" placeholder=""><label><input type="checkbox" id="x3" checked> ne radimo</label>
+      </div>
+    </section>
+
+    <section class="q" data-q="3">
+      <h2><span class="num">3</span>Zbog čega vas ljudi najčešće zovu?</h2>
+      <p class="hint">Označite 3 do 5 usluga. Ako nema vaše, dopišite je.</p>
+      <div class="chips" id="usluge"></div>
+      <div class="add"><input id="uslugaNova" placeholder="Druga usluga…"><button type="button" data-add="usluge">Dodaj</button></div>
+    </section>
+
+    <section class="q" data-q="4">
+      <h2><span class="num">4</span>Okvirne cene</h2>
+      <p class="hint">Samo ako smete da ih kažete preko telefona. Dovoljno je „od 6.000“.</p>
+      <div class="tog"><input type="checkbox" id="naUpit"><label for="naUpit">Cene govorimo samo na upit</label></div>
+      <div class="prices" id="prices"></div>
+      <p class="hint" id="pricesEmpty" style="margin-top:10px">Prvo označite usluge u pitanju 3.</p>
+    </section>
+
+    <section class="q" data-q="5">
+      <h2><span class="num">5</span>Šta vas mušterije najčešće pitaju?</h2>
+      <p class="hint">Označite ili dopišite dva-tri pitanja.</p>
+      <div class="chips" id="pitanja"></div>
+      <div class="add"><input id="pitanjaNova" placeholder="Drugo pitanje…"><button type="button" data-add="pitanja">Dodaj</button></div>
+    </section>
+
+    <section class="q" data-q="6">
+      <h2><span class="num">6</span>Šta asistent treba da zapiše od onoga ko zove?</h2>
+      <p class="hint">Ime i broj telefona uzima uvek. Šta još?</p>
+      <div class="chips" id="uzeti"></div>
+      <div class="add"><input id="uzetiNova" placeholder="Nešto drugo…"><button type="button" data-add="uzeti">Dodaj</button></div>
+    </section>
+
+    <section class="q" data-q="7">
+      <h2><span class="num">7</span>Šta asistent nikako ne sme da obeća ili kaže?</h2>
+      <div class="chips" id="nesme"></div>
+      <div class="add"><input id="nesmeNova" placeholder="Nešto drugo…"><button type="button" data-add="nesme">Dodaj</button></div>
+    </section>
+
+    <section class="q">
+      <h2><span class="num">+</span>Još nešto? (nije obavezno)</h2>
+      <textarea id="napomena" placeholder="Bilo šta što bi asistent trebalo da zna: popusti, partneri, parking, jezici…"></textarea>
+      <label class="l">Vaše ime</label><input id="kIme" autocomplete="name">
+      <label class="l">Broj na koji da vam pošaljem link za demo</label><input id="kTel" inputmode="tel" autocomplete="tel">
+    </section>
+  </form>
+</div>
+
+<div class="send" id="sendBar" hidden>
+  <button type="button" id="sendBtn">Pošalji</button>
+  <div class="err" id="err"></div>
+</div>
+
+<script type="module">
+  const DB_URL = "https://wnmamkiegcbzivvxdpdb.supabase.co";
+  const DB_KEY = "sb_publishable_xwyOOlLotEszvLIpwtTrHw_tGTBTtxF";
+  const $ = (id) => document.getElementById(id);
+  const token = (new URLSearchParams(location.search).get("b") || "").trim();
+
+  const PRIMERI = {
+    auto: {
+      opis: "npr. popravka i servis putničkih vozila",
+      usluge: ["Mali servis","Veliki servis (zupčasti kaiš)","Kompjuterska dijagnostika","Kočnice","Trap i vešanje","Auto klima","Auto elektrika","Zamena guma","Šlep služba","Tehnički pregled"],
+      pitanja: ["Imate li slobodan termin danas?","Koliko košta mali servis?","Da li radite moju marku auta?","Koliko traje popravka?","Da li imate delove na stanju?","Radite li subotom?"],
+      uzeti: ["Marka, model i godište auta","Šta je problem sa autom","Željeni dan i vreme","Da li je auto u voznom stanju","Lokacija (za šlep)"],
+      nesme: ["Tačan rok popravke","Tačnu cenu pre pregleda auta","Termin bez potvrde majstora","Da je deo na stanju"],
+    },
+    skola: {
+      opis: "npr. obuka vozača za B kategoriju",
+      usluge: ["B kategorija","A kategorija (motor)","C kategorija","Dodatni časovi vožnje","Polaganje teorije","Lekarsko uverenje"],
+      pitanja: ["Koliko košta B kategorija?","Kad počinje sledeća grupa?","Da li može na rate?","Koliko traje obuka?"],
+      uzeti: ["Koju kategoriju želi","Kad bi da počne","Da li već ima neku kategoriju"],
+      nesme: ["Da će sigurno položiti","Tačan datum ispita","Popust koji nije odobren"],
+    },
+    zubar: {
+      opis: "npr. stomatološka ordinacija, opšta stomatologija i protetika",
+      usluge: ["Pregled","Popravka zuba (plomba)","Vađenje zuba","Lečenje kanala","Skidanje kamenca","Izbeljivanje","Krunice i mostovi","Implantati","Proteza","Dečja stomatologija"],
+      pitanja: ["Imate li slobodan termin ove nedelje?","Koliko košta plomba?","Da li primate hitne slučajeve?","Da li može plaćanje na rate?"],
+      uzeti: ["Razlog dolaska","Da li ga boli (hitno)","Željeni dan i vreme","Da li je već bio pacijent"],
+      nesme: ["Medicinski savet ili dijagnozu","Tačnu cenu pre pregleda","Termin bez potvrde ordinacije"],
+    },
+    zdravlje: {
+      opis: "npr. poliklinika, specijalistički pregledi i laboratorija",
+      usluge: ["Specijalistički pregled","Laboratorijske analize","Ultrazvuk","Sistematski pregled","Kućne posete","Fizikalna terapija","Pregled vida","Ginekološki pregled"],
+      pitanja: ["Da li treba zakazivanje za analize?","Kako da se pripremim za analize?","Koliko košta pregled?","Kad stižu rezultati?","Da li radite subotom?"],
+      uzeti: ["Koji pregled ili analiza","Željeni dan i vreme","Da li je već bio pacijent","Godine pacijenta"],
+      nesme: ["Medicinski savet ili dijagnozu","Tumačenje nalaza","Termin bez potvrde","Tačnu cenu pre pregleda"],
+    },
+    vet: {
+      opis: "npr. veterinarska ambulanta za kućne ljubimce",
+      usluge: ["Pregled","Vakcinacija","Čipovanje i pasoš","Sterilizacija i kastracija","Hitni slučajevi","Šišanje i kupanje","Kućne posete"],
+      pitanja: ["Da li primate hitne slučajeve?","Koliko košta vakcina?","Imate li termin danas?","Da li dolazite na adresu?"],
+      uzeti: ["Vrsta ljubimca i rasa","Šta se desilo","Da li je hitno","Željeni dan i vreme"],
+      nesme: ["Veterinarski savet ili dijagnozu","Lekove ili doze","Termin bez potvrde"],
+    },
+    salon: {
+      opis: "npr. frizerski salon za žene i muškarce",
+      usluge: ["Šišanje","Farbanje","Pramenovi","Feniranje","Nadogradnja noktiju","Manikir i pedikir","Depilacija","Tretmani lica","Šminkanje","Trepavice i obrve"],
+      pitanja: ["Imate li slobodan termin danas?","Koliko košta farbanje?","Ko radi taj tretman?","Koliko traje tretman?"],
+      uzeti: ["Koja usluga","Željeni dan i vreme","Kod koga želi termin","Dužina kose"],
+      nesme: ["Termin bez potvrde salona","Tačnu cenu za farbanje pre konsultacija"],
+    },
+    advokat: {
+      opis: "npr. advokatska kancelarija, porodično i radno pravo",
+      usluge: ["Konsultacije","Porodično pravo (razvod, starateljstvo)","Radno pravo","Nekretnine i ugovori","Naknada štete","Krivični postupci","Privredno pravo","Nasledno pravo"],
+      pitanja: ["Koliko košta konsultacija?","Da li radite ovakve predmete?","Kada mogu da dođem?"],
+      uzeti: ["Kratko o čemu je reč","Da li ima rok ili ročište","Najbolje vreme za povratni poziv"],
+      nesme: ["Pravni savet","Ishod predmeta","Cenu zastupanja"],
+    },
+    nekretnine: {
+      opis: "npr. agencija za promet nekretnina",
+      usluge: ["Prodaja stanova","Izdavanje stanova","Kuće i placevi","Poslovni prostori","Procena vrednosti","Pomoć oko papira i kredita"],
+      pitanja: ["Da li je stan iz oglasa još dostupan?","Može li razgledanje danas?","Kolika je provizija?","Da li je cena fiksna?"],
+      uzeti: ["Koja nekretnina ili oglas","Kupuje, prodaje ili iznajmljuje","Budžet","Željeno vreme za razgledanje"],
+      nesme: ["Da je nekretnina još dostupna bez provere","Popust na cenu","Termin razgledanja bez potvrde agenta"],
+    },
+    opste: {
+      opis: "npr. čime se tačno bavite",
+      usluge: [], pitanja: ["Koliko košta?","Imate li slobodan termin?","Kakvo je radno vreme?","Gde se nalazite?"],
+      uzeti: ["Šta mu treba","Željeni dan i vreme","Najbolje vreme za povratni poziv"],
+      nesme: ["Tačnu cenu bez provere","Termin bez potvrde"],
+    },
+  };
+  function vrsta(d) {
+    d = (d || "").toLowerCase();
+    if (/škol|skol/.test(d)) return "skola";
+    if (/stomatolog|zub|dent/.test(d)) return "zubar";
+    if (/veterin/.test(d)) return "vet";
+    if (/zdravstv|poliklin|laborator|ordinac|optik|očn|ocn|ginek|fizikal|medic/.test(d)) return "zdravlje";
+    if (/frizer|kozmet|salon|makeup|šmink|nokt/.test(d)) return "salon";
+    if (/advokat/.test(d)) return "advokat";
+    if (/nekretnin/.test(d)) return "nekretnine";
+    if (/auto|vulkan|šlep|slep|tehnič|tehnic|registr|klim|auspuh|reglaž|gume|alat/.test(d)) return "auto";
+    return "opste";
+  }
+
+  const sel = { usluge: new Set(), pitanja: new Set(), uzeti: new Set(), nesme: new Set() };
+  const cene = {};
+  let P = PRIMERI.opste;
+
+  function chips(key) {
+    const all = [...new Set([...(P[key] || []), ...sel[key]])];
+    $(key).innerHTML = all.map((t) => `<button type="button" class="chip${sel[key].has(t) ? " on" : ""}" data-k="${key}">${esc(t)}</button>`).join("") || `<span class="hint">Dopišite ispod.</span>`;
+  }
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  function renderPrices() {
+    const list = [...sel.usluge];
+    $("pricesEmpty").hidden = list.length > 0 || $("naUpit").checked;
+    $("prices").hidden = $("naUpit").checked;
+    $("prices").innerHTML = list.map((u) => `<div class="pr"><span>${esc(u)}</span><input data-cena="${esc(u)}" value="${esc(cene[u] || "")}" placeholder="npr. od 3.000"></div>`).join("");
+  }
+  document.addEventListener("click", (e) => {
+    const c = e.target.closest(".chip[data-k]");
+    if (c) { const k = c.dataset.k, t = c.textContent.replace(/^✓\s*/, ""); sel[k].has(t) ? sel[k].delete(t) : sel[k].add(t); chips(k); if (k === "usluge") renderPrices(); progress(); return; }
+    const a = e.target.closest("[data-add]");
+    if (a) { const k = a.dataset.add, inp = $(k + "Nova"), t = inp.value.trim(); if (t) { sel[k].add(t); inp.value = ""; chips(k); if (k === "usluge") renderPrices(); progress(); } }
+  });
+  ["usluge","pitanja","uzeti","nesme"].forEach((k) => $(k + "Nova").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.querySelector(`[data-add="${k}"]`).click(); } }));
+  document.addEventListener("input", (e) => { if (e.target.dataset.cena != null) cene[e.target.dataset.cena] = e.target.value; progress(); });
+  $("naUpit").addEventListener("change", () => { renderPrices(); progress(); });
+  for (const i of [1,2,3]) $("x" + i).addEventListener("change", () => { $("h" + i).disabled = $("x" + i).checked; if ($("x" + i).checked) $("h" + i).value = ""; progress(); });
+
+  function done() {
+    return {
+      1: !!$("naziv").value.trim(),
+      2: !!$("adresa").value.trim() && [1,2,3].some((i) => $("h" + i).value.trim()),
+      3: sel.usluge.size > 0,
+      4: $("naUpit").checked || Object.values(cene).some((v) => v.trim()),
+      5: sel.pitanja.size > 0,
+      6: sel.uzeti.size > 0,
+      7: sel.nesme.size > 0,
+    };
+  }
+  function progress() {
+    const d = done(), n = Object.values(d).filter(Boolean).length;
+    $("fill").style.width = (n / 7 * 100) + "%";
+    $("barTxt").textContent = n === 7 ? "Sve je popunjeno, možete da pošaljete." : `${n} od 7`;
+    document.querySelectorAll(".q[data-q]").forEach((q) => q.classList.toggle("done", !!d[q.dataset.q]));
+  }
+
+  async function rpc(name, body) {
+    const r = await fetch(`${DB_URL}/rest/v1/rpc/${name}`, { method: "POST", headers: { apikey: DB_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function init() {
+    if (!/^[0-9a-f-]{36}$/i.test(token)) { $("loading").hidden = true; $("bad").hidden = false; return; }
+    let info;
+    try { const r = await rpc("brief_info", { p_token: token }); info = r && r[0]; } catch (e) { info = null; }
+    $("loading").hidden = true;
+    if (!info) { $("bad").hidden = false; return; }
+    P = PRIMERI[vrsta(info.delatnost)];
+    const ime = (info.firma || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+    document.title = "Kratki upitnik – " + ime;
+    $("title").textContent = "Kratki upitnik za " + ime;
+    $("naziv").value = ime;
+    $("opis").placeholder = P.opis;
+    $("adresa").value = info.adresa || (info.grad || "");
+    $("kTel").value = "";
+    ["usluge","pitanja","uzeti","nesme"].forEach(chips); renderPrices();
+    $("h3").disabled = true;
+    $("form").hidden = false; $("sendBar").hidden = false; progress();
+  }
+
+  $("sendBtn").onclick = async () => {
+    $("err").textContent = "";
+    const d = done();
+    if (!d[1]) { $("err").textContent = "Upišite bar naziv firme."; $("naziv").focus(); return; }
+    const hv = (i) => $("x" + i).checked ? "ne radi" : $("h" + i).value.trim();
+    const odg = {
+      naziv: $("naziv").value.trim(), opis: $("opis").value.trim(), adresa: $("adresa").value.trim(),
+      radno_vreme: { "pon-pet": hv(1), subota: hv(2), nedelja: hv(3) },
+      usluge: [...sel.usluge].map((u) => ({ usluga: u, cena: $("naUpit").checked ? "" : (cene[u] || "").trim() })),
+      cene_na_upit: $("naUpit").checked,
+      pitanja: [...sel.pitanja], uzeti: [...sel.uzeti], ne_sme: [...sel.nesme],
+      napomena: $("napomena").value.trim(), kontakt_ime: $("kIme").value.trim(), kontakt_tel: $("kTel").value.trim(),
+      popunjeno: Object.values(d).filter(Boolean).length,
+    };
+    $("sendBtn").disabled = true; $("sendBtn").textContent = "Šaljem…";
+    try {
+      const ok = await rpc("posalji_brief", { p_token: token, p_odgovori: odg });
+      if (!ok) throw new Error("odbijeno");
+      $("form").hidden = true; $("sendBar").hidden = true; $("thanks").hidden = false; window.scrollTo(0, 0);
+    } catch (e) {
+      $("sendBtn").disabled = false; $("sendBtn").textContent = "Pošalji";
+      $("err").textContent = "Slanje nije uspelo. Proverite internet i pokušajte ponovo.";
+    }
+  };
+
+  init();
+</script>
+</body>
+</html>
