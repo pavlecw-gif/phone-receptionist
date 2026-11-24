@@ -251,8 +251,8 @@
   // ---------- pomoćne ----------
   const dan = (d = new Date()) => d.toLocaleDateString("sv-SE");
   const plusDana = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return dan(d); };
-  const fmtT = (t) => new Date(t).toLocaleString("sr-RS", { day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" });
-  const fmtDan = (s) => s ? new Date(s + "T12:00:00").toLocaleDateString("sr-RS", { weekday:"short", day:"numeric", month:"numeric" }) : "";
+  const fmtT = (t) => new Date(t).toLocaleString("sr-Latn-RS", { day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" });
+  const fmtDan = (s) => s ? new Date(s + "T12:00:00").toLocaleDateString("sr-Latn-RS", { weekday:"short", day:"numeric", month:"numeric" }) : "";
   const fmtD = (s) => s == null ? "" : `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
   const stIdx = (s) => Math.max(0, STATUSI.indexOf(s));
   const isAdmin = () => me.uloga === "admin";
@@ -335,7 +335,7 @@
     const today = dan();
     const sat = new Date().getHours();
     $("hello").textContent = (sat < 12 ? "Dobro jutro" : sat < 18 ? "Dobar dan" : "Dobro veče") + ", " + me.ime;
-    $("todayLine").textContent = new Date().toLocaleDateString("sr-RS", { weekday:"long", day:"numeric", month:"long" });
+    $("todayLine").textContent = new Date().toLocaleDateString("sr-Latn-RS", { weekday:"long", day:"numeric", month:"long" });
     const moji = leads;
     const zvanoDanas = moji.filter((l) => l.poslednji_poziv === today).length;
     const cnt = (s) => moji.filter((l) => l.status === s).length;
@@ -463,7 +463,7 @@
     const ds = demo ? demoStat(demo.slug) : null;
     const convs = demo ? ev.filter((x) => x.firma_slug === demo.slug && x.tip === "poziv_zavrsen" && x.conversation_id).slice(0, 5) : [];
     $("pBody").innerHTML = `
-      ${isNew ? "" : `<div class="row" style="align-items:center;margin:8px 0 4px">${callBtn(l)}<div style="flex:0">${statusSel(l)}</div></div>
+      ${isNew ? "" : `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 4px">${callBtn(l)}${statusSel(l)}</div>
       <div style="margin:8px 0 2px">${dots(l)} <span class="muted">interesovanje</span></div>`}
       <form id="pForm">
         ${isNew ? `<label>Ime firme</label><input name="firma" required>` : ""}
