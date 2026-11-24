@@ -1,65 +1,185 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="sr" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0f0d">
 <title>Admin – Phone Receptionist</title>
+<script>try{const t=localStorage.getItem("pr_tema");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
-  :root { --bg:#f4f3ef; --card:#fff; --b:#e1ded6; --t:#111; --m:#5b616c; --a:#e4500b; --ok:#16a34a; --r:#dc2626; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--t); }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 18px 14px 60px; }
-  h1 { font-size: 22px; margin: 0 0 14px; }
-  h2 { font-size: 17px; margin: 0 0 10px; }
-  .card { background:var(--card); border:1px solid var(--b); border-radius:14px; padding:16px; margin-bottom:14px; }
-  label { display:block; font-size:13px; font-weight:600; color:var(--m); margin:10px 0 4px; }
-  input, textarea, select { width:100%; font:inherit; font-size:15px; padding:9px 11px; border:1px solid #ccc; border-radius:9px; background:#fff; }
-  textarea { min-height: 220px; resize: vertical; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; } .row > div { flex:1; min-width:180px; }
-  button { font:inherit; font-weight:600; padding:9px 14px; border-radius:9px; border:1px solid #ccc; background:#fff; cursor:pointer; }
-  button.p { background:var(--a); color:#fff; border-color:var(--a); }
-  button.s { padding:5px 9px; font-size:13px; }
+  :root, [data-theme="dark"] {
+    --bg:#0b0f0d; --bg2:#111714; --card:#141b17; --card2:#1a231e; --b:#24302a; --t:#e8efe9; --m:#8a978f;
+    --a:#22c55e; --a2:#4ade80; --ai:#04140a; --r:#f87171; --y:#facc15; --o:#fb923c; --bl:#60a5fa; --pu:#c084fc; --g:#9ca3af;
+    --in:#0f1512; --sh:0 1px 0 rgba(255,255,255,.03) inset;
+  }
+  [data-theme="light"] {
+    --bg:#f3f5f2; --bg2:#e9ede8; --card:#ffffff; --card2:#f6f8f5; --b:#dfe5de; --t:#101512; --m:#5c6760;
+    --a:#16a34a; --a2:#22c55e; --ai:#ffffff; --r:#dc2626; --y:#ca8a04; --o:#ea580c; --bl:#2563eb; --pu:#9333ea; --g:#6b7280;
+    --in:#ffffff; --sh:none;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--t); font-size:15px; }
+  a { color:var(--a2); }
+  [hidden] { display:none !important; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 14px 90px; }
+  header.top { position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--b); }
+  header .in { max-width:1040px; margin:0 auto; padding:10px 14px; display:flex; align-items:center; gap:10px; }
+  .brand { font-weight:800; letter-spacing:-.01em; white-space:nowrap; }
+  .brand span { color:var(--a); }
+  nav.tabs { display:flex; gap:4px; overflow-x:auto; flex:1; scrollbar-width:none; }
+  nav.tabs::-webkit-scrollbar { display:none; }
+  nav.tabs button { background:transparent; border:1px solid transparent; color:var(--m); padding:7px 12px; border-radius:999px; font-weight:650; white-space:nowrap; }
+  nav.tabs button.on { background:var(--card2); color:var(--t); border-color:var(--b); }
+  .icon { background:var(--card); border:1px solid var(--b); color:var(--t); border-radius:10px; width:36px; height:36px; display:grid; place-items:center; padding:0; flex:none; }
+  h1 { font-size:22px; margin:18px 0 4px; letter-spacing:-.01em; }
+  h2 { font-size:16px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  h2 .n { background:var(--card2); border:1px solid var(--b); color:var(--m); font-size:12px; padding:1px 8px; border-radius:999px; font-weight:700; }
+  .sub { color:var(--m); margin:0 0 14px; font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--b); border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:var(--sh); }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:12px; }
+  .stat { background:var(--card); border:1px solid var(--b); border-radius:14px; padding:12px; }
+  .stat b { display:block; font-size:24px; letter-spacing:-.02em; }
+  .stat span { color:var(--m); font-size:12.5px; }
+  label { display:block; font-size:12.5px; font-weight:650; color:var(--m); margin:10px 0 4px; }
+  input, textarea, select { width:100%; font:inherit; font-size:15px; padding:9px 11px; border:1px solid var(--b); border-radius:10px; background:var(--in); color:var(--t); }
+  input:focus, textarea:focus, select:focus { outline:2px solid color-mix(in srgb, var(--a) 55%, transparent); outline-offset:0; border-color:var(--a); }
+  textarea { min-height:90px; resize:vertical; }
+  textarea.big { min-height:240px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; } .row > * { flex:1; min-width:150px; }
+  button { font:inherit; font-weight:650; padding:9px 14px; border-radius:10px; border:1px solid var(--b); background:var(--card2); color:var(--t); cursor:pointer; }
+  button:hover { border-color:color-mix(in srgb, var(--a) 50%, var(--b)); }
+  button.p { background:var(--a); color:var(--ai); border-color:var(--a); }
+  button.s { padding:5px 10px; font-size:13px; border-radius:8px; }
+  button.ghost { background:transparent; }
+  a.btn { display:inline-block; font-weight:650; border:1px solid var(--b); background:var(--card2); color:var(--t); text-decoration:none; }
+  a.btn.s { padding:5px 10px; font-size:13px; border-radius:8px; }
+  .call { display:inline-flex; align-items:center; gap:6px; background:color-mix(in srgb, var(--a) 16%, transparent); color:var(--a2); border:1px solid color-mix(in srgb, var(--a) 40%, transparent); padding:7px 12px; border-radius:10px; font-weight:700; text-decoration:none; white-space:nowrap; font-size:14px; }
+  .call svg { width:15px; height:15px; }
+  .muted { color:var(--m); font-size:13px; }
+  .msg { padding:9px 12px; border-radius:10px; margin-top:10px; font-size:14px; }
+  .msg.ok { background:color-mix(in srgb, var(--a) 14%, transparent); color:var(--a2); }
+  .msg.err { background:color-mix(in srgb, var(--r) 14%, transparent); color:var(--r); }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid currentColor; white-space:nowrap; }
+  /* status boje */
+  .st-0 { color:var(--g); } .st-1 { color:var(--o); } .st-2 { color:var(--pu); } .st-3 { color:var(--g); opacity:.75; }
+  .st-4 { color:var(--y); } .st-5 { color:#2dd4bf; } .st-6 { color:var(--bl); } .st-7 { color:var(--r); } .st-8 { color:var(--a2); }
+  select.status { width:auto; min-width:150px; padding:6px 9px; font-size:13.5px; font-weight:700; border-radius:9px; }
+  /* lista firmi */
+  .filters { display:grid; gap:8px; grid-template-columns:2fr repeat(4,1fr); margin-bottom:10px; }
+  @media (max-width:760px){ .filters { grid-template-columns:1fr 1fr; } .filters .q { grid-column:1/-1; } }
+  .lead { display:grid; grid-template-columns:1fr auto; gap:8px 12px; padding:12px 2px; border-bottom:1px solid var(--b); }
+  .lead:last-child { border-bottom:0; }
+  .lead .name { font-weight:700; cursor:pointer; line-height:1.3; }
+  .lead .name:hover { color:var(--a2); }
+  .lead .meta { color:var(--m); font-size:12.5px; margin-top:3px; }
+  .lead .acts { display:flex; gap:8px; align-items:center; flex-wrap:wrap; grid-column:1/-1; }
+  .dots { display:inline-flex; gap:4px; }
+  .dots button { width:26px; height:26px; padding:0; border-radius:8px; font-size:12px; font-weight:800; color:var(--m); background:transparent; }
+  .dots button.on { color:var(--ai); }
+  .dots button.on.i1 { background:var(--r); border-color:var(--r); } .dots button.on.i2 { background:var(--o); border-color:var(--o); }
+  .dots button.on.i3 { background:var(--y); border-color:var(--y); } .dots button.on.i4 { background:#2dd4bf; border-color:#2dd4bf; }
+  .dots button.on.i5 { background:var(--a); border-color:var(--a); }
+  .mini { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--b); }
+  .mini:last-child { border-bottom:0; }
+  .mini .l { min-width:0; } .mini .l b { cursor:pointer; } .mini .l b:hover { color:var(--a2); }
+  .empty { color:var(--m); font-size:14px; padding:6px 0; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--b); vertical-align:top; }
-  th { color:var(--m); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-  .muted { color:var(--m); font-size:13px; }
-  .tabs { display:flex; gap:6px; margin:6px 0 10px; } .tabs button.on { background:#111; color:#fff; border-color:#111; }
-  .msg { padding:9px 12px; border-radius:9px; margin-top:10px; font-size:14px; }
-  .msg.ok { background:#e8f6ec; color:var(--ok); } .msg.err { background:#fde8e8; color:var(--r); }
-  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; background:#eee; }
-  .pill.on { background:#e8f6ec; color:var(--ok); }
+  th { color:var(--m); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; }
   .scroll { overflow-x:auto; }
-  [hidden] { display:none !important; }
+  .seg { display:inline-flex; gap:4px; background:var(--bg2); padding:3px; border-radius:11px; margin:2px 0 10px; }
+  .seg button { border:0; background:transparent; padding:6px 12px; border-radius:8px; color:var(--m); }
+  .seg button.on { background:var(--card); color:var(--t); }
+  /* kartica (panel) */
+  .ov { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; }
+  .panel { position:fixed; top:0; right:0; bottom:0; width:min(560px,100%); background:var(--bg); border-left:1px solid var(--b); z-index:41; overflow-y:auto; padding:0 16px 40px; }
+  .panel .ph { position:sticky; top:0; background:var(--bg); padding:14px 0 10px; border-bottom:1px solid var(--b); margin-bottom:6px; display:flex; gap:10px; align-items:flex-start; z-index:2; }
+  .panel .ph h3 { margin:0; font-size:18px; line-height:1.25; flex:1; }
+  .hist { list-style:none; margin:0; padding:0; }
+  .hist li { padding:8px 0; border-bottom:1px solid var(--b); font-size:14px; }
+  .hist li .muted { display:block; }
+  .toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--card2); color:var(--t); border:1px solid var(--b); padding:10px 16px; border-radius:12px; z-index:60; font-size:14px; box-shadow:0 10px 30px rgba(0,0,0,.35); max-width:92vw; }
+  .login { max-width:380px; margin:12vh auto 0; }
+  details summary { cursor:pointer; color:var(--m); font-weight:650; font-size:13px; margin-top:10px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Phone Receptionist – admin</h1>
+<header class="top">
+  <div class="in">
+    <div class="brand">Phone <span>Receptionist</span></div>
+    <nav class="tabs" id="nav" hidden>
+      <button data-v="danas" class="on">Danas</button>
+      <button data-v="pozivi">Pozivi</button>
+      <button data-v="demo" data-admin>Demo</button>
+    </nav>
+    <span style="flex:1" id="spacer"></span>
+    <button class="icon" id="themeBtn" title="Svetla / tamna tema" aria-label="Tema">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button class="icon" id="logout" title="Odjava" aria-label="Odjava" hidden>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+  </div>
+</header>
 
-  <div class="card" id="loginBox" hidden>
+<div class="wrap">
+  <!-- PRIJAVA -->
+  <div class="card login" id="loginBox" hidden>
     <h2>Prijava</h2>
     <form id="loginForm">
       <label>Mejl</label><input id="email" type="email" autocomplete="username" required>
       <label>Lozinka</label><input id="pass" type="password" autocomplete="current-password" required>
-      <div style="margin-top:12px"><button class="p" type="submit">Prijavi se</button></div>
+      <div style="margin-top:14px"><button class="p" type="submit" style="width:100%">Prijavi se</button></div>
       <div id="loginMsg"></div>
     </form>
   </div>
 
-  <div id="app" hidden>
-    <div class="row" style="align-items:center;margin-bottom:10px">
-      <div class="muted" id="who"></div>
-      <div style="flex:0"><button id="logout">Odjava</button></div>
+  <!-- DANAS -->
+  <section id="v-danas" hidden>
+    <h1 id="hello">Danas</h1>
+    <p class="sub" id="todayLine"></p>
+    <div class="stats" id="stats"></div>
+    <div class="grid">
+      <div class="card"><h2>Pozovi danas <span class="n" id="nDue">0</span></h2><div id="dueList"></div></div>
+      <div class="card" data-admin><h2>Demo bez odgovora 3+ dana <span class="n" id="nStale">0</span></h2><div id="staleList"></div></div>
+      <div class="card" data-admin><h2>Aktivnost na demo stranicama, 48 h</h2><div id="demoAct"></div></div>
+      <div class="card"><h2>Sledeći na listi</h2><p class="muted" style="margin:-4px 0 6px">Nezvane firme, prvo visok prioritet.</p><div id="nextList"></div></div>
     </div>
+  </section>
 
+  <!-- POZIVI -->
+  <section id="v-pozivi" hidden>
+    <h1>Pozivi</h1>
+    <p class="sub">Klik na ime otvara karticu firme. Status i interesovanje se čuvaju čim ih promeniš.</p>
+    <div class="filters">
+      <input class="q" id="fq" type="search" placeholder="Traži firmu, telefon, adresu…">
+      <select id="fStatus"></select>
+      <select id="fVl" data-admin><option value="">Svi (ja + partner)</option><option value="pavle">Moje</option><option value="partner">Partnerove</option></select>
+      <select id="fDel"></select>
+      <select id="fGrad"></select>
+    </div>
+    <div class="row" style="align-items:center;margin-bottom:8px">
+      <div class="muted" id="count"></div>
+      <div style="flex:0;white-space:nowrap"><button class="s" id="newLead">+ Nova firma</button></div>
+    </div>
+    <div class="card" style="padding:4px 14px"><div id="leadList"></div></div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="v-demo" hidden>
+    <h1>Demo stranice</h1>
+    <p class="sub">Podaci firme koje agent zna na demo stranici. Link: <span class="muted" id="baseUrl"></span></p>
     <div class="card">
       <h2 id="formTitle">Novi demo</h2>
-      <div class="tabs">
+      <div id="forLead" class="msg ok" hidden></div>
+      <div class="seg" id="modeSeg">
         <button type="button" data-m="brief" class="on">Brief (nema sajt)</button>
         <button type="button" data-m="link">Link sajta</button>
       </div>
-      <p class="muted" id="modeHint">Nalepi odgovore iz briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.</p>
+      <p class="muted" id="modeHint" style="margin-top:0">Nalepi odgovore iz kratkog briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.</p>
       <form id="firmForm">
         <div class="row">
           <div><label>Ime firme</label><input id="f_ime" required></div>
@@ -71,18 +191,15 @@
         </div>
         <label>Sajt</label><input id="f_sajt" type="url" placeholder="https://...">
         <label>Podaci o firmi (ovo agent zna)</label>
-        <textarea id="f_pod" placeholder="O firmi: ...&#10;Radno vreme: ...&#10;Usluge i cene: ...&#10;Adresa i kontakt: ...&#10;Napomene: ..."></textarea>
-        <label style="display:flex;gap:8px;align-items:center;font-weight:600;color:var(--t)"><input id="f_akt" type="checkbox" style="width:auto" checked> Demo je aktivan (link radi)</label>
-        <div class="row" style="margin-top:12px">
-          <div style="flex:0;display:flex;gap:8px">
-            <button class="p" type="submit" id="saveBtn">Sačuvaj demo</button>
-            <button type="button" id="resetBtn">Novo / poništi</button>
-          </div>
-        </div>
+        <textarea id="f_pod" class="big" placeholder="O firmi: ...&#10;Radno vreme: ...&#10;Usluge i cene: ...&#10;Adresa i kontakt: ...&#10;Napomene: ..."></textarea>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:650;color:var(--t)"><input id="f_akt" type="checkbox" style="width:auto" checked> Demo je aktivan (link radi)</label>
+        <div class="row" style="margin-top:12px"><div style="flex:0;display:flex;gap:8px;white-space:nowrap">
+          <button class="p" type="submit">Sačuvaj demo</button>
+          <button type="button" id="resetBtn">Novo / poništi</button>
+        </div></div>
         <div id="formMsg"></div>
       </form>
     </div>
-
     <div class="card">
       <h2>Demoi</h2>
       <div class="scroll"><table>
@@ -90,7 +207,6 @@
         <tbody id="firmRows"></tbody>
       </table></div>
     </div>
-
     <div class="card">
       <h2>Poslednji događaji</h2>
       <div class="scroll"><table>
@@ -98,32 +214,77 @@
         <tbody id="evRows"></tbody>
       </table></div>
     </div>
-  </div>
+  </section>
 </div>
+
+<!-- KARTICA FIRME -->
+<div class="ov" id="ov" hidden></div>
+<aside class="panel" id="panel" hidden aria-label="Kartica firme">
+  <div class="ph">
+    <h3 id="pTitle"></h3>
+    <button class="icon" id="pClose" aria-label="Zatvori">✕</button>
+  </div>
+  <div id="pBody"></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
 
 <script type="module">
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
   const sb = createClient("https://wnmamkiegcbzivvxdpdb.supabase.co", "sb_publishable_xwyOOlLotEszvLIpwtTrHw_tGTBTtxF");
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const BASE = location.href.replace(/admin\.html.*$/, "");
-  const fmtT = (t) => new Date(t).toLocaleString("sr-RS", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
-  const fmtD = (s) => s == null ? "" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const TIP = { otvoreno: "otvorio stranicu", poziv_pocet: "počeo poziv", poziv_zavrsen: "završio poziv" };
-  let firme = [], editing = null;
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const BASE = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
+  const ADMIN_EMAILS = ["pavlecw@gmail.com", "trajkovicpavle5@gmail.com"];
 
-  function msg(el, text, ok) { $(el).innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+  const STATUSI = ["Nije zvano","Nije se javio","Vlasnik nije tu","Nepostojeći broj","Pozvati ponovo","Zainteresovan","Zakazan demo","Nije zainteresovan","Klijent"];
+  const ZAVRSNI = ["Nepostojeći broj","Nije zainteresovan","Klijent"];
+  const PONOVO = { "Nije se javio": 1, "Vlasnik nije tu": 1, "Pozvati ponovo": 2, "Zainteresovan": 2 };
+  const INT = ["", "Nimalo", "Slabo", "Možda", "Zainteresovan", "Veoma"];
+  const PRIO = { 1: "visok", 2: "srednji", 3: "niži" };
+  const TIP = { otvoreno: "otvorio stranicu", poziv_pocet: "počeo poziv", poziv_zavrsen: "završio poziv" };
+  const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
+
+  let me = { email: "", uloga: "admin", ime: "Pavle" };
+  let leads = [], firme = [], ev = [], view = "danas";
+
+  // ---------- pomoćne ----------
+  const dan = (d = new Date()) => d.toLocaleDateString("sv-SE");
+  const plusDana = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return dan(d); };
+  const fmtT = (t) => new Date(t).toLocaleString("sr-RS", { day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" });
+  const fmtDan = (s) => s ? new Date(s + "T12:00:00").toLocaleDateString("sr-RS", { weekday:"short", day:"numeric", month:"numeric" }) : "";
+  const fmtD = (s) => s == null ? "" : `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  const stIdx = (s) => Math.max(0, STATUSI.indexOf(s));
+  const isAdmin = () => me.uloga === "admin";
+  const tel = (t) => t ? "tel:" + t.replace(/[^\d+]/g, "").replace(/^0/, "+381") : "";
   function slugify(s) {
-    const map = { č: "c", ć: "c", š: "s", ž: "z", đ: "dj" };
+    const map = { č:"c", ć:"c", š:"s", ž:"z", đ:"dj" };
     return s.toLowerCase().replace(/[čćšžđ]/g, (c) => map[c]).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   }
+  function msg(el, text, ok) { $(el).innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+  let tt; function toast(t) { $("toast").textContent = t; $("toast").hidden = false; clearTimeout(tt); tt = setTimeout(() => $("toast").hidden = true, 2600); }
+  const statusSel = (l) => `<select class="status st-${stIdx(l.status)}" data-st="${l.id}">${STATUSI.map((s) => `<option${s === l.status ? " selected" : ""}>${s}</option>`).join("")}</select>`;
+  const dots = (l) => `<span class="dots" title="Interesovanje 1–5">${[1,2,3,4,5].map((i) => `<button class="${l.interesovanje === i ? "on i" + i : ""}" data-int="${l.id}" data-v="${i}" title="${INT[i]}">${i}</button>`).join("")}</span>`;
+  const callBtn = (l) => l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}${esc(l.telefon)}</a>` : `<span class="muted">nema broja</span>`;
 
+  // ---------- tema ----------
+  $("themeBtn").onclick = () => {
+    const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("pr_tema", t); } catch (e) {}
+  };
+
+  // ---------- prijava ----------
   async function show() {
     const { data: { session } } = await sb.auth.getSession();
-    $("loginBox").hidden = !!session; $("app").hidden = !session;
-    if (session) { $("who").textContent = "Prijavljen: " + session.user.email; await load(); }
+    $("loginBox").hidden = !!session; $("nav").hidden = !session; $("logout").hidden = !session; $("spacer").hidden = !!session;
+    if (!session) { document.querySelectorAll("section").forEach((s) => s.hidden = true); return; }
+    me.email = session.user.email;
+    const { data: k } = await sb.from("korisnici").select("ime,uloga").eq("email", me.email).maybeSingle();
+    if (k) { me.uloga = k.uloga; me.ime = k.ime; } else { me.uloga = ADMIN_EMAILS.includes(me.email) ? "admin" : "partner"; }
+    document.querySelectorAll("[data-admin]").forEach((el) => el.hidden = !isAdmin());
+    await loadAll(); go(view);
   }
-
   $("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault(); msg("loginMsg", "");
     const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pass").value });
@@ -131,20 +292,286 @@
   });
   $("logout").onclick = async () => { await sb.auth.signOut(); show(); };
 
-  document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
-    document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  // ---------- navigacija ----------
+  function go(v) {
+    if (v === "demo" && !isAdmin()) v = "danas";
+    view = v;
+    document.querySelectorAll("#nav button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+    document.querySelectorAll("section").forEach((s) => s.hidden = s.id !== "v-" + v);
+    if (v === "danas") renderDanas(); if (v === "pozivi") renderPozivi(); if (v === "demo") renderDemo();
+    try { history.replaceState(null, "", "#" + v); } catch (e) {}
+  }
+  document.querySelectorAll("#nav button").forEach((b) => b.onclick = () => { go(b.dataset.v); window.scrollTo(0, 0); });
+  if (["danas","pozivi","demo"].includes(location.hash.slice(1))) view = location.hash.slice(1);
+
+  // ---------- učitavanje ----------
+  async function loadAll() {
+    const q = [sb.from("leadovi").select("*").order("prioritet", { ascending: true, nullsFirst: false }).order("firma").limit(5000)];
+    if (isAdmin()) {
+      q.push(sb.from("firme").select("*").order("created_at", { ascending: false }));
+      q.push(sb.from("dogadjaji").select("*").order("created_at", { ascending: false }).limit(2000));
+    }
+    const r = await Promise.all(q);
+    const err = r.find((x) => x.error);
+    if (err) {
+      const m = /leadovi|korisnici|aktivnosti/.test(err.error.message) ? "Tabele za pozive još nisu napravljene u bazi (pokreni SQL za korak 1)." : err.error.message;
+      toast("Greška: " + m);
+    }
+    leads = r[0].data || []; firme = (r[1] && r[1].data) || []; ev = (r[2] && r[2].data) || [];
+    fillFilters();
+  }
+  const demoStat = (slug) => {
+    const s = { o: 0, p: 0, last: null, sec: 0 };
+    for (const x of ev) if (x.firma_slug === slug) {
+      if (x.tip === "otvoreno") s.o++; if (x.tip === "poziv_pocet") s.p++;
+      if (x.tip === "poziv_zavrsen") s.sec += x.trajanje_sekundi || 0;
+      if (!s.last) s.last = x.created_at;
+    }
+    return s;
+  };
+
+  // ---------- DANAS ----------
+  function renderDanas() {
+    const today = dan();
+    const sat = new Date().getHours();
+    $("hello").textContent = (sat < 12 ? "Dobro jutro" : sat < 18 ? "Dobar dan" : "Dobro veče") + ", " + me.ime;
+    $("todayLine").textContent = new Date().toLocaleDateString("sr-RS", { weekday:"long", day:"numeric", month:"long" });
+    const moji = leads;
+    const zvanoDanas = moji.filter((l) => l.poslednji_poziv === today).length;
+    const cnt = (s) => moji.filter((l) => l.status === s).length;
+    const nezvano = cnt("Nije zvano");
+    $("stats").innerHTML = [
+      [zvanoDanas, "pozvano danas"], [moji.length - nezvano, "pozvano ukupno"], [nezvano, "još nije zvano"],
+      [cnt("Zainteresovan") + cnt("Zakazan demo"), "zainteresovano / demo"], [cnt("Klijent"), "klijenata"],
+    ].map(([n, t]) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`).join("");
+
+    const due = leads.filter((l) => l.sledeci_poziv && l.sledeci_poziv <= today && !ZAVRSNI.includes(l.status))
+      .sort((a, b) => a.sledeci_poziv.localeCompare(b.sledeci_poziv));
+    $("nDue").textContent = due.length;
+    $("dueList").innerHTML = due.map((l) => miniRow(l, l.sledeci_poziv < today ? `<span class="pill st-7">kasni od ${fmtDan(l.sledeci_poziv)}</span>` : `<span class="pill st-${stIdx(l.status)}">${esc(l.status)}</span>`)).join("")
+      || `<div class="empty">Nema zakazanih poziva za danas. Kad staviš „Nije se javio“, „Vlasnik nije tu“ ili „Pozvati ponovo“, firma se ovde vraća.</div>`;
+
+    if (isAdmin()) {
+      const lim = Date.now() - 3 * 864e5;
+      const stale = leads.filter((l) => l.status === "Zakazan demo" && new Date(l.updated_at).getTime() < lim);
+      $("nStale").textContent = stale.length;
+      $("staleList").innerHTML = stale.map((l) => {
+        const s = l.demo_slug ? demoStat(l.demo_slug) : null;
+        return miniRow(l, s ? `<span class="muted">${s.o}× otvoren · ${s.p}× pozvan</span>` : `<span class="muted">demo nije povezan</span>`);
+      }).join("") || `<div class="empty">Nema dema koji čekaju duže od 3 dana.</div>`;
+
+      const from = Date.now() - 48 * 36e5, by = {};
+      for (const x of ev) if (new Date(x.created_at).getTime() > from) {
+        const b = by[x.firma_slug] ||= { o: 0, p: 0, last: x.created_at, conv: null };
+        if (x.tip === "otvoreno") b.o++; if (x.tip === "poziv_pocet") b.p++;
+        if (!b.conv && x.conversation_id) b.conv = x.conversation_id;
+      }
+      const ime = Object.fromEntries(firme.map((f) => [f.slug, f.ime]));
+      const lid = Object.fromEntries(leads.filter((l) => l.demo_slug).map((l) => [l.demo_slug, l.id]));
+      $("demoAct").innerHTML = Object.entries(by).map(([slug, b]) => `<div class="mini"><div class="l"><b ${lid[slug] ? `data-open="${lid[slug]}"` : ""}>${esc(ime[slug] || slug)}</b><div class="muted">${b.o}× otvorio · ${b.p}× pozvao · ${fmtT(b.last)}</div></div>${b.conv ? `<a class="btn s" href="https://elevenlabs.io/app/agents/history/${encodeURIComponent(b.conv)}" target="_blank" rel="noopener">Slušaj</a>` : ""}</div>`).join("")
+        || `<div class="empty">Niko nije otvarao demo stranice u poslednja 2 dana.</div>`;
+    }
+
+    const next = leads.filter((l) => l.status === "Nije zvano" && l.telefon && (!isAdmin() || l.vlasnik === "pavle")).slice(0, 8);
+    $("nextList").innerHTML = next.map((l) => miniRow(l, `<span class="muted">${esc(l.delatnost || "")}</span>`)).join("") || `<div class="empty">Sve firme sa liste su pozvane.</div>`;
+  }
+  function miniRow(l, right) {
+    return `<div class="mini"><div class="l"><b data-open="${l.id}">${esc(l.firma)}</b><div class="muted">${esc(l.grad || "")}${l.telefon ? " · " + esc(l.telefon) : ""}</div>${right ? `<div style="margin-top:4px">${right}</div>` : ""}</div>${l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}Pozovi</a>` : ""}</div>`;
+  }
+
+  // ---------- POZIVI ----------
+  function fillFilters() {
+    const keep = (id) => $(id).value;
+    const vs = keep("fStatus"), vd = keep("fDel"), vg = keep("fGrad");
+    $("fStatus").innerHTML = `<option value="">Svi statusi</option><option value="_akt">Aktivni (bez završenih)</option><option value="_due">Za ponovni poziv</option>` + STATUSI.map((s) => `<option>${s}</option>`).join("");
+    const uniq = (k) => [...new Set(leads.map((l) => l[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "sr"));
+    $("fDel").innerHTML = `<option value="">Sve delatnosti</option>` + uniq("delatnost").map((d) => `<option>${esc(d)}</option>`).join("");
+    $("fGrad").innerHTML = `<option value="">Svi gradovi</option>` + uniq("grad").map((d) => `<option>${esc(d)}</option>`).join("");
+    $("fStatus").value = vs; $("fDel").value = vd; $("fGrad").value = vg;
+  }
+  ["fq","fStatus","fVl","fDel","fGrad"].forEach((id) => $(id).addEventListener("input", renderPozivi));
+  function filtered() {
+    const q = $("fq").value.trim().toLowerCase(), st = $("fStatus").value, vl = $("fVl").value, d = $("fDel").value, g = $("fGrad").value, today = dan();
+    return leads.filter((l) => {
+      if (st === "_akt" && ZAVRSNI.includes(l.status)) return false;
+      if (st === "_due" && !(l.sledeci_poziv && l.sledeci_poziv <= today && !ZAVRSNI.includes(l.status))) return false;
+      if (st && !st.startsWith("_") && l.status !== st) return false;
+      if (vl && isAdmin() && l.vlasnik !== vl) return false;
+      if (d && l.delatnost !== d) return false;
+      if (g && l.grad !== g) return false;
+      if (q && ![l.firma, l.telefon, l.adresa, l.napomena].join(" ").toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+  function renderPozivi() {
+    const list = filtered();
+    $("count").textContent = `${list.length} od ${leads.length} firmi`;
+    $("leadList").innerHTML = list.map((l) => `<div class="lead">
+      <div><div class="name" data-open="${l.id}">${esc(l.firma)}</div>
+        <div class="meta">${[l.grad, l.delatnost, l.prioritet ? "prioritet " + PRIO[l.prioritet] : "", isAdmin() && l.vlasnik === "partner" ? "partner" : "", l.poslednji_poziv ? "zvan " + fmtDan(l.poslednji_poziv) : "", l.sledeci_poziv && !ZAVRSNI.includes(l.status) ? "ponovo " + fmtDan(l.sledeci_poziv) : ""].filter(Boolean).map(esc).join(" · ")}</div>
+        ${l.napomena ? `<div class="meta" style="color:var(--t);opacity:.85">${esc(l.napomena.length > 140 ? l.napomena.slice(0, 140) + "…" : l.napomena)}</div>` : ""}
+      </div>
+      <div>${callBtn(l)}</div>
+      <div class="acts">${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}</div>
+    </div>`).join("") || `<div class="empty" style="padding:14px 0">Nema firmi za ovaj filter.</div>`;
+  }
+
+  // ---------- izmene: status, interesovanje ----------
+  async function setStatus(id, status) {
+    const l = leads.find((x) => x.id == id); if (!l) return;
+    const patch = { status };
+    if (status !== "Nije zvano") patch.poslednji_poziv = dan();
+    patch.sledeci_poziv = PONOVO[status] ? plusDana(PONOVO[status]) : (ZAVRSNI.includes(status) || status === "Zakazan demo" ? null : l.sledeci_poziv);
+    const { error } = await sb.from("leadovi").update(patch).eq("id", id);
+    if (error) { toast("Nije sačuvano: " + error.message); return; }
+    Object.assign(l, patch, { updated_at: new Date().toISOString() });
+    await sb.from("aktivnosti").insert({ lead_id: l.id, tip: "poziv", status, interesovanje: l.interesovanje });
+    toast(patch.sledeci_poziv ? `Sačuvano · ponovo zovi ${fmtDan(patch.sledeci_poziv)}` : "Sačuvano");
+    rerender();
+  }
+  async function setInt(id, v) {
+    const l = leads.find((x) => x.id == id); if (!l) return;
+    const nv = l.interesovanje === v ? null : v;
+    const { error } = await sb.from("leadovi").update({ interesovanje: nv }).eq("id", id);
+    if (error) { toast("Nije sačuvano: " + error.message); return; }
+    l.interesovanje = nv; toast(nv ? `Interesovanje: ${nv} – ${INT[nv]}` : "Interesovanje obrisano"); rerender();
+  }
+  function rerender() { if (view === "pozivi") renderPozivi(); if (view === "danas") renderDanas(); if (openId) renderPanel(); }
+
+  document.addEventListener("change", (e) => { const s = e.target.closest("[data-st]"); if (s) setStatus(s.dataset.st, s.value); });
+  document.addEventListener("click", (e) => {
+    const i = e.target.closest("[data-int]"); if (i) { setInt(i.dataset.int, +i.dataset.v); return; }
+    const o = e.target.closest("[data-open]"); if (o) { openLead(+o.dataset.open); return; }
+  });
+
+  // ---------- KARTICA FIRME ----------
+  let openId = null;
+  async function openLead(id) { openId = id; $("ov").hidden = false; $("panel").hidden = false; document.body.style.overflow = "hidden"; await renderPanel(); }
+  function closePanel() { openId = null; $("ov").hidden = true; $("panel").hidden = true; document.body.style.overflow = ""; }
+  $("pClose").onclick = closePanel; $("ov").onclick = closePanel;
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId !== null) closePanel(); });
+
+  async function renderPanel() {
+    const isNew = openId === 0;
+    const l = isNew ? { id: 0, firma: "", status: "Nije zvano", vlasnik: isAdmin() ? "pavle" : "partner" } : leads.find((x) => x.id === openId);
+    if (!l) return closePanel();
+    $("pTitle").innerHTML = isNew ? "Nova firma" : esc(l.firma);
+    let hist = [];
+    if (!isNew) { const { data } = await sb.from("aktivnosti").select("*").eq("lead_id", l.id).order("created_at", { ascending: false }).limit(100); hist = data || []; }
+    const f = (k) => esc(l[k] ?? "");
+    const demo = l.demo_slug ? firme.find((x) => x.slug === l.demo_slug) : null;
+    const ds = demo ? demoStat(demo.slug) : null;
+    const convs = demo ? ev.filter((x) => x.firma_slug === demo.slug && x.tip === "poziv_zavrsen" && x.conversation_id).slice(0, 5) : [];
+    $("pBody").innerHTML = `
+      ${isNew ? "" : `<div class="row" style="align-items:center;margin:8px 0 4px">${callBtn(l)}<div style="flex:0">${statusSel(l)}</div></div>
+      <div style="margin:8px 0 2px">${dots(l)} <span class="muted">interesovanje</span></div>`}
+      <form id="pForm">
+        ${isNew ? `<label>Ime firme</label><input name="firma" required>` : ""}
+        <div class="row">
+          <div><label>Telefon</label><input name="telefon" value="${f("telefon")}" inputmode="tel"></div>
+          <div><label>Sledeći poziv</label><input name="sledeci_poziv" type="date" value="${f("sledeci_poziv")}"></div>
+        </div>
+        <label>Beleška</label><textarea name="napomena" placeholder="Šta je rekao, s kim si pričao, kad da zoveš…">${f("napomena")}</textarea>
+        ${l.status === "Nije zainteresovan" ? `<label>Zašto nije zainteresovan</label><input name="razlog_odbijanja" value="${f("razlog_odbijanja")}" placeholder="npr. ima sekretaricu, skupo, ne veruje u AI">` : ""}
+        <div class="row">
+          <div><label>Grad</label><input name="grad" value="${f("grad")}"></div>
+          <div><label>Delatnost</label><input name="delatnost" value="${f("delatnost")}"></div>
+        </div>
+        <label>Adresa</label><input name="adresa" value="${f("adresa")}">
+        <div class="row">
+          <div><label>Sajt</label><input name="sajt" value="${f("sajt")}" placeholder="https://…"></div>
+          <div><label>Mejl</label><input name="mejl" value="${f("mejl")}" type="email"></div>
+        </div>
+        <div class="row">
+          <div><label>Prioritet</label><select name="prioritet"><option value="">—</option>${[1,2,3].map((p) => `<option value="${p}"${l.prioritet === p ? " selected" : ""}>${p} – ${PRIO[p]}</option>`).join("")}</select></div>
+          ${isAdmin() ? `<div><label>Ko zove</label><select name="vlasnik"><option value="pavle"${l.vlasnik === "pavle" ? " selected" : ""}>Ja (Pavle)</option><option value="partner"${l.vlasnik === "partner" ? " selected" : ""}>Partner</option></select></div>` : ""}
+        </div>
+        <details><summary>Zašto ima smisla i izvor</summary>
+          <label>Zašto ima smisla</label><textarea name="zasto" style="min-height:60px">${f("zasto")}</textarea>
+          <label>Izvor</label><input name="izvor" value="${f("izvor")}">
+        </details>
+        <div style="margin-top:14px;display:flex;gap:8px"><button class="p" type="submit">${isNew ? "Dodaj firmu" : "Sačuvaj"}</button></div>
+        <div id="pMsg"></div>
+      </form>
+
+      ${isNew || !isAdmin() ? "" : `<div class="card" style="margin-top:16px"><h2>Demo</h2>
+        ${demo ? `<div><b>${esc(demo.ime)}</b> <span class="pill ${demo.aktivan ? "st-8" : "st-0"}">${demo.aktivan ? "aktivan" : "ugašen"}</span></div>
+          <div class="muted" style="margin:4px 0 8px">${ds.o}× otvoren · ${ds.p}× pozvan${ds.sec ? " · ukupno " + fmtD(ds.sec) : ""}${ds.last ? " · poslednje " + fmtT(ds.last) : ""}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" data-copy="${esc(demo.slug)}">Kopiraj link</button><a class="btn s" href="${BASE}?f=${encodeURIComponent(demo.slug)}&test=1" target="_blank" rel="noopener">Otvori (test)</a><button class="s" type="button" id="editDemo">Izmeni podatke</button></div>
+          ${convs.length ? `<div class="muted" style="margin-top:10px">Snimci: ${convs.map((c) => `<a href="https://elevenlabs.io/app/agents/history/${encodeURIComponent(c.conversation_id)}" target="_blank" rel="noopener">${fmtT(c.created_at)} (${fmtD(c.trajanje_sekundi)})</a>`).join(" · ")}</div>` : ""}`
+        : `<p class="muted" style="margin-top:0">Još nema demo stranicu.</p>
+          <div class="row"><select id="linkDemo"><option value="">Poveži postojeći demo…</option>${firme.map((x) => `<option value="${esc(x.slug)}">${esc(x.ime)}</option>`).join("")}</select>
+          <div style="flex:0;white-space:nowrap"><button class="p s" type="button" id="makeDemo">Napravi demo</button></div></div>`}
+      </div>`}
+
+      ${isNew ? "" : `<div class="card" style="margin-top:12px"><h2>Istorija</h2>
+        <div class="row"><input id="noteIn" placeholder="Dodaj belešku u istoriju…"><div style="flex:0"><button type="button" id="noteBtn">Dodaj</button></div></div>
+        <ul class="hist" style="margin-top:8px">${hist.map((h) => `<li>${h.tip === "poziv" ? `Status: <span class="pill st-${stIdx(h.status)}">${esc(h.status)}</span>${h.interesovanje ? ` · interesovanje ${h.interesovanje}` : ""}` : esc(h.tekst || h.tip)}<span class="muted">${fmtT(h.created_at)}${h.autor && h.autor !== me.email ? " · " + esc(h.autor) : ""}</span></li>`).join("") || `<li class="muted">Još nema zapisa.</li>`}</ul>
+      </div>`}
+    `;
+    $("pForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = Object.fromEntries(new FormData(e.target).entries());
+      for (const k in fd) { fd[k] = fd[k].trim() || null; }
+      if (fd.prioritet) fd.prioritet = +fd.prioritet;
+      if (isNew) {
+        if (!fd.firma) return msg("pMsg", "Upiši ime firme.");
+        if (!isAdmin()) fd.vlasnik = "partner";
+        const { data, error } = await sb.from("leadovi").insert(fd).select().single();
+        if (error) return msg("pMsg", "Nije sačuvano: " + error.message);
+        leads.push(data); openId = data.id; fillFilters(); toast("Firma dodata"); rerender(); return;
+      }
+      const { error } = await sb.from("leadovi").update(fd).eq("id", l.id);
+      if (error) return msg("pMsg", "Nije sačuvano: " + error.message);
+      Object.assign(l, fd); fillFilters(); toast("Sačuvano"); rerender();
+    };
+    if (!isNew) {
+      $("noteBtn").onclick = async () => {
+        const t = $("noteIn").value.trim(); if (!t) return;
+        const { error } = await sb.from("aktivnosti").insert({ lead_id: l.id, tip: "beleska", tekst: t });
+        if (error) return toast("Nije sačuvano: " + error.message);
+        renderPanel();
+      };
+      $("noteIn").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); $("noteBtn").click(); } };
+    }
+    if ($("linkDemo")) $("linkDemo").onchange = async (e) => {
+      if (!e.target.value) return;
+      const { error } = await sb.from("leadovi").update({ demo_slug: e.target.value }).eq("id", l.id);
+      if (error) return toast("Nije sačuvano: " + error.message);
+      l.demo_slug = e.target.value; toast("Demo povezan"); renderPanel();
+    };
+    if ($("makeDemo")) $("makeDemo").onclick = () => { pendingLead = l; closePanel(); go("demo"); prefillDemo(l); };
+    if ($("editDemo")) $("editDemo").onclick = () => { closePanel(); go("demo"); editFirm(demo.id); };
+  }
+  $("newLead").onclick = () => openLead(0);
+  document.addEventListener("click", async (e) => {
+    const c = e.target.closest("[data-copy]"); if (!c) return;
+    const url = BASE + "?f=" + c.dataset.copy;
+    try { await navigator.clipboard.writeText(url); toast("Link kopiran: " + url); } catch (er) { prompt("Kopiraj link:", url); }
+  });
+
+  // ---------- DEMO ----------
+  let editing = null, pendingLead = null;
+  $("baseUrl").textContent = BASE + "?f=…";
+  document.querySelectorAll("#modeSeg button").forEach((b) => b.onclick = () => {
+    document.querySelectorAll("#modeSeg button").forEach((x) => x.classList.toggle("on", x === b));
     $("modeHint").textContent = b.dataset.m === "link"
-      ? "Upiši sajt firme i pošalji link Claude-u u četu: on pročita sajt i vrati sređene podatke, koje nalepiš ispod (ili ih on upiše direktno)."
-      : "Nalepi odgovore iz briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.";
+      ? "Upiši sajt firme i pošalji link Claude-u u četu: on pročita sajt i upiše sređene podatke ovde."
+      : "Nalepi odgovore iz kratkog briefa (radno vreme, usluge, cene, adresa, kontakt, napomene). Agent zna samo ono što je ovde upisano.";
   });
   $("f_ime").addEventListener("input", () => { if (!editing) $("f_slug").value = slugify($("f_ime").value); });
-
   function resetForm() {
-    editing = null; $("firmForm").reset(); $("f_akt").checked = true;
+    editing = null; pendingLead = null; $("firmForm").reset(); $("f_akt").checked = true; $("forLead").hidden = true;
     $("formTitle").textContent = "Novi demo"; $("f_slug").disabled = false; msg("formMsg", "");
   }
   $("resetBtn").onclick = resetForm;
-
+  function prefillDemo(l) {
+    editing = null; $("firmForm").reset(); $("f_akt").checked = true; $("f_slug").disabled = false;
+    $("formTitle").textContent = "Novi demo"; msg("formMsg", "");
+    $("f_ime").value = l.firma.replace(/\s*\(.*?\)\s*/g, " ").trim(); $("f_slug").value = slugify($("f_ime").value);
+    $("f_del").value = l.delatnost || ""; $("f_grad").value = l.grad || ""; $("f_sajt").value = l.sajt || "";
+    $("forLead").hidden = false; $("forLead").textContent = "Pravi se demo za: " + l.firma + ". Posle čuvanja se automatski povezuje sa karticom firme.";
+  }
   $("firmForm").addEventListener("submit", async (e) => {
     e.preventDefault(); msg("formMsg", "");
     const row = {
@@ -155,47 +582,32 @@
     const q = editing ? sb.from("firme").update(row).eq("id", editing) : sb.from("firme").insert(row);
     const { error } = await q;
     if (error) return msg("formMsg", "Nije sačuvano: " + error.message);
+    if (pendingLead) {
+      await sb.from("leadovi").update({ demo_slug: row.slug }).eq("id", pendingLead.id);
+      await sb.from("aktivnosti").insert({ lead_id: pendingLead.id, tip: "demo", tekst: "Napravljen demo: " + BASE + "?f=" + row.slug });
+      pendingLead.demo_slug = row.slug; pendingLead = null; $("forLead").hidden = true;
+    }
     msg("formMsg", "Sačuvano. Link: " + BASE + "?f=" + row.slug, true);
-    if (!editing) { editing = null; }
-    await load();
+    await loadAll(); renderDemo();
   });
-
   window.editFirm = (id) => {
     const f = firme.find((x) => x.id === id); if (!f) return;
-    editing = id; $("formTitle").textContent = "Izmena: " + f.ime;
+    editing = id; pendingLead = null; $("forLead").hidden = true; $("formTitle").textContent = "Izmena: " + f.ime;
     $("f_ime").value = f.ime; $("f_slug").value = f.slug; $("f_slug").disabled = true;
     $("f_del").value = f.delatnost || ""; $("f_grad").value = f.grad || ""; $("f_sajt").value = f.sajt || "";
     $("f_pod").value = f.podaci_firme || ""; $("f_akt").checked = f.aktivan; msg("formMsg", "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  window.copyLink = async (slug, btn) => {
-    const url = BASE + "?f=" + slug;
-    try { await navigator.clipboard.writeText(url); btn.textContent = "Kopirano"; } catch (e) { btn.textContent = url; }
-    setTimeout(() => btn.textContent = "Kopiraj link", 2000);
-  };
-
-  async function load() {
-    const [{ data: f, error: e1 }, { data: ev, error: e2 }] = await Promise.all([
-      sb.from("firme").select("*").order("created_at", { ascending: false }),
-      sb.from("dogadjaji").select("*").order("created_at", { ascending: false }).limit(1000),
-    ]);
-    if (e1 || e2) { $("firmRows").innerHTML = `<tr><td colspan="6">Greška: ${esc((e1 || e2).message)}</td></tr>`; return; }
-    firme = f || [];
-    const st = {};
-    for (const x of ev || []) {
-      const s = st[x.firma_slug] ||= { o: 0, p: 0, last: null };
-      if (x.tip === "otvoreno") s.o++; if (x.tip === "poziv_pocet") s.p++;
-      if (!s.last) s.last = x.created_at;
-    }
+  function renderDemo() {
     $("firmRows").innerHTML = firme.map((x) => {
-      const s = st[x.slug] || { o: 0, p: 0, last: null };
+      const s = demoStat(x.slug);
       return `<tr><td><b>${esc(x.ime)}</b><div class="muted">${esc(x.grad || "")}${x.delatnost ? " · " + esc(x.delatnost) : ""}</div><div class="muted">?f=${esc(x.slug)}</div></td>
         <td>${s.o}</td><td>${s.p}</td><td class="muted">${s.last ? fmtT(s.last) : "—"}</td>
-        <td><span class="pill ${x.aktivan ? "on" : ""}">${x.aktivan ? "aktivan" : "ugašen"}</span></td>
-        <td style="white-space:nowrap"><button class="s" onclick="copyLink('${esc(x.slug)}', this)">Kopiraj link</button> <button class="s" onclick="editFirm('${x.id}')">Izmeni</button></td></tr>`;
+        <td><span class="pill ${x.aktivan ? "st-8" : "st-0"}">${x.aktivan ? "aktivan" : "ugašen"}</span></td>
+        <td style="white-space:nowrap"><button class="s" data-copy="${esc(x.slug)}">Kopiraj link</button> <button class="s" onclick="editFirm('${x.id}')">Izmeni</button></td></tr>`;
     }).join("") || `<tr><td colspan="6" class="muted">Još nema demoa.</td></tr>`;
     const byS = Object.fromEntries(firme.map((x) => [x.slug, x.ime]));
-    $("evRows").innerHTML = (ev || []).slice(0, 100).map((x) => `<tr><td class="muted">${fmtT(x.created_at)}</td><td>${esc(byS[x.firma_slug] || x.firma_slug)}</td><td>${TIP[x.tip] || esc(x.tip)}</td><td>${esc(x.glas || "")}</td><td>${fmtD(x.trajanje_sekundi)}</td><td>${x.conversation_id ? `<a href="https://elevenlabs.io/app/agents/history/${encodeURIComponent(x.conversation_id)}" target="_blank" rel="noopener">Slušaj</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">Još nema događaja.</td></tr>`;
+    $("evRows").innerHTML = ev.slice(0, 100).map((x) => `<tr><td class="muted">${fmtT(x.created_at)}</td><td>${esc(byS[x.firma_slug] || x.firma_slug)}</td><td>${TIP[x.tip] || esc(x.tip)}</td><td>${esc(x.glas || "")}</td><td>${fmtD(x.trajanje_sekundi)}</td><td>${x.conversation_id ? `<a href="https://elevenlabs.io/app/agents/history/${encodeURIComponent(x.conversation_id)}" target="_blank" rel="noopener">Slušaj</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">Još nema događaja.</td></tr>`;
   }
 
   sb.auth.onAuthStateChange(() => {});
