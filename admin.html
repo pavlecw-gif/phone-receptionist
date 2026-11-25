@@ -347,10 +347,10 @@
     if (o.adresa) L.push(`Adresa: ${o.adresa}.`);
     if ((o.usluge || []).length) {
       L.push(`Usluge${o.cene_na_upit ? "" : " i okvirne cene (uvek naglasi da su okvirne)"}:`);
-      for (const u of o.usluge) L.push(`- ${u.usluga}${u.cena ? ": " + u.cena + (/din|€|eur|rsd/i.test(u.cena) ? "" : " dinara") : ""}`);
+      for (const u of o.usluge) L.push(`- ${u.usluga}${u.cena ? ": " + u.cena + (/din|€|eur|rsd/i.test(u.cena) ? "" : " dinara") : (o.cene_na_upit ? "" : " (cena na upit)")}`);
     }
     if (o.cene_na_upit) L.push("Cene: ne govori cene preko telefona; uzmi kontakt i reci da će ih kolega javiti.");
-    if ((o.pitanja || []).length) L.push(`Mušterije najčešće pitaju: ${o.pitanja.join("; ")}.`);
+    if ((o.pitanja || []).length) L.push(`Mušterije najčešće pitaju: ${o.pitanja.map((x) => x.replace(/[.?!\s]+$/, "")).join("? ")}?`);
     L.push(`Od onoga ko zove uzmi: ime, broj telefona${(o.uzeti || []).length ? ", " + o.uzeti.join(", ").toLowerCase() : ""}.`);
     if ((o.ne_sme || []).length) L.push(`Nikako ne obećavaj i ne govori: ${o.ne_sme.join(", ").toLowerCase()}.`);
     if (o.napomena) L.push(`Napomene: ${o.napomena}`);
