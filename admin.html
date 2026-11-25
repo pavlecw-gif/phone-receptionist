@@ -117,6 +117,17 @@
   .hist { list-style:none; margin:0; padding:0; }
   .hist li { padding:8px 0; border-bottom:1px solid var(--b); font-size:14px; }
   .hist li .muted { display:block; }
+  .sheet { position:fixed; left:0; right:0; bottom:0; z-index:51; background:var(--bg); border-top:1px solid var(--b); border-radius:20px 20px 0 0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; box-shadow:0 -10px 40px rgba(0,0,0,.4); }
+  @media (min-width:700px){ .sheet { left:50%; right:auto; width:560px; transform:translateX(-50%); bottom:20px; border-radius:20px; border:1px solid var(--b); } }
+  .sheet h3 { margin:0 0 2px; font-size:18px; }
+  .sbtns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+  .sbtns button { padding:12px 8px; font-size:14.5px; border-radius:12px; text-align:center; }
+  .sbtns button.on { outline:2px solid currentColor; outline-offset:-2px; background:color-mix(in srgb, currentColor 14%, transparent); }
+  .dchips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .dchips button { padding:7px 11px; font-size:13.5px; border-radius:999px; }
+  .dchips button.on { background:var(--a); color:var(--ai); border-color:var(--a); }
+  .dchips input { width:auto; padding:6px 9px; font-size:14px; }
+  .ov2 { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50; }
   .toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--card2); color:var(--t); border:1px solid var(--b); padding:10px 16px; border-radius:12px; z-index:60; font-size:14px; box-shadow:0 10px 30px rgba(0,0,0,.35); max-width:92vw; }
   .login { max-width:380px; margin:12vh auto 0; }
   details summary { cursor:pointer; color:var(--m); font-weight:650; font-size:13px; margin-top:10px; }
@@ -246,6 +257,20 @@
   <div id="pBody"></div>
 </aside>
 
+<div class="ov2" id="qOv" hidden></div>
+<div class="sheet" id="qSheet" hidden role="dialog" aria-label="Upiši poziv">
+  <div style="display:flex;gap:10px;align-items:flex-start">
+    <div style="flex:1;min-width:0"><h3 id="qTitle"></h3><div class="muted" id="qSub"></div></div>
+    <button class="icon" id="qClose" aria-label="Zatvori">✕</button>
+  </div>
+  <div class="sbtns" id="qStatus"></div>
+  <label>Interesovanje</label><div id="qInt"></div>
+  <label>Ponovo zvati</label>
+  <div class="dchips" id="qDate"></div>
+  <label>Beleška (nije obavezno)</label>
+  <textarea id="qNote" style="min-height:64px" placeholder="Šta je rekao, s kim si pričao…"></textarea>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="p" id="qSave" style="flex:1;padding:13px">Sačuvaj</button><button id="qCancel" style="padding:13px">Otkaži</button></div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script type="module">
@@ -442,7 +467,7 @@
     $("nextList").innerHTML = next.map((l) => miniRow(l, `<span class="muted">${esc(l.delatnost || "")}</span>`)).join("") || `<div class="empty">Sve firme sa liste su pozvane.</div>`;
   }
   function miniRow(l, right) {
-    return `<div class="mini"><div class="l"><b data-open="${l.id}">${esc(l.firma)}</b><div class="muted">${esc(l.grad || "")}${l.telefon ? " · " + esc(l.telefon) : ""}</div>${right ? `<div style="margin-top:4px">${right}</div>` : ""}</div>${l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}Pozovi</a>` : ""}</div>`;
+    return `<div class="mini"><div class="l"><b data-open="${l.id}">${esc(l.firma)}</b><div class="muted">${esc(l.grad || "")}${l.telefon ? " · " + esc(l.telefon) : ""}</div>${right ? `<div style="margin-top:4px">${right}</div>` : ""}</div><div style="display:flex;gap:6px;flex:none">${l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}Pozovi</a>` : ""}<button class="s" data-q="${l.id}">Upiši</button></div></div>`;
   }
 
   // ---------- POZIVI ----------
@@ -497,7 +522,7 @@
         ${l.napomena ? `<div class="meta nap" style="color:var(--t);opacity:.85">${esc(l.napomena.length > 140 ? l.napomena.slice(0, 140) + "…" : l.napomena)}</div>` : ""}
       </div>
       <div>${callBtn(l)}</div>
-      <div class="acts">${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}${isAdmin() && briefOf(l.id) ? `<span class="pill st-8">brief</span>` : ""}</div>
+      <div class="acts"><button class="s p" data-q="${l.id}">Upiši</button>${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}${isAdmin() && briefOf(l.id) ? `<span class="pill st-8">brief</span>` : ""}</div>
     </div>`).join("") || `<div class="empty" style="padding:14px 0">Nema firmi za ovaj filter.</div>`;
   }
 
@@ -529,14 +554,58 @@
     const o = e.target.closest("[data-open]"); if (o) { openLead(+o.dataset.open); return; }
   });
 
+  // ---------- BRZI UPIS ----------
+  let q = null;
+  function openQuick(id) {
+    const l = leads.find((x) => x.id == id); if (!l) return;
+    q = { l, status: l.status === "Nije zvano" ? null : l.status, int: l.interesovanje || null, date: l.sledeci_poziv || null, dateTouched: false };
+    $("qTitle").textContent = l.firma;
+    $("qSub").innerHTML = (l.telefon ? `<a href="${tel(l.telefon)}">${esc(l.telefon)}</a> · ` : "") + "sada: " + esc(l.status);
+    $("qNote").value = "";
+    renderQuick(); $("qOv").hidden = false; $("qSheet").hidden = false;
+  }
+  function closeQuick() { q = null; $("qOv").hidden = true; $("qSheet").hidden = true; }
+  function renderQuick() {
+    $("qStatus").innerHTML = STATUSI.filter((s) => s !== "Nije zvano").map((s) => `<button type="button" class="st-${stIdx(s)}${q.status === s ? " on" : ""}" data-qs="${esc(s)}">${esc(s)}</button>`).join("");
+    $("qInt").innerHTML = `<span class="dots">${[1,2,3,4,5].map((i) => `<button type="button" class="${q.int === i ? "on i" + i : ""}" data-qi="${i}" title="${INT[i]}">${i}</button>`).join("")}</span> <span class="muted">${q.int ? INT[q.int] : ""}</span>`;
+    const opts = [["Ne", null], ["Danas", plusDana(0)], ["Sutra", plusDana(1)], ["Za 2 dana", plusDana(2)], ["Za nedelju", plusDana(7)]];
+    $("qDate").innerHTML = opts.map(([t, d]) => `<button type="button" class="${q.date === d ? "on" : ""}" data-qd="${d || ""}">${t}</button>`).join("") + `<input type="date" id="qDateIn" value="${q.date || ""}">`;
+    $("qDateIn").onchange = (e) => { q.date = e.target.value || null; q.dateTouched = true; renderQuick(); };
+  }
+  $("qSheet").addEventListener("click", (e) => {
+    const s = e.target.closest("[data-qs]"); if (s) { q.status = s.dataset.qs; if (!q.dateTouched) q.date = PONOVO[q.status] ? plusDana(PONOVO[q.status]) : (ZAVRSNI.includes(q.status) || q.status === "Zakazan demo" ? null : q.date); renderQuick(); return; }
+    const i = e.target.closest("[data-qi]"); if (i) { const v = +i.dataset.qi; q.int = q.int === v ? null : v; renderQuick(); return; }
+    const d = e.target.closest("[data-qd]"); if (d) { q.date = d.dataset.qd || null; q.dateTouched = true; renderQuick(); return; }
+  });
+  $("qClose").onclick = closeQuick; $("qCancel").onclick = closeQuick; $("qOv").onclick = closeQuick;
+  $("qSave").onclick = async () => {
+    const l = q.l, note = $("qNote").value.trim();
+    const patch = { interesovanje: q.int, sledeci_poziv: q.date };
+    if (q.status) { patch.status = q.status; patch.poslednji_poziv = dan(); }
+    if (note) patch.napomena = (l.napomena ? l.napomena + "\n" : "") + new Date().toLocaleDateString("sr-Latn-RS", { day:"numeric", month:"numeric" }) + " " + note;
+    $("qSave").disabled = true;
+    const { error } = await sb.from("leadovi").update(patch).eq("id", l.id);
+    $("qSave").disabled = false;
+    if (error) { toast("Nije sačuvano: " + error.message); return; }
+    Object.assign(l, patch, { updated_at: new Date().toISOString() });
+    const akt = [];
+    if (q.status) akt.push({ lead_id: l.id, tip: "poziv", status: q.status, interesovanje: q.int });
+    if (note) akt.push({ lead_id: l.id, tip: "beleska", tekst: note });
+    if (akt.length) await sb.from("aktivnosti").insert(akt);
+    closeQuick();
+    toast("Sačuvano" + (patch.sledeci_poziv ? " · ponovo zovi " + fmtDan(patch.sledeci_poziv) : ""));
+    rerender();
+  };
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-q]"); if (b && b.closest("#leadList, #panel, #v-danas")) { e.preventDefault(); openQuick(+b.dataset.q); } });
+
   // ---------- KARTICA FIRME ----------
   let openId = null;
   async function openLead(id) { openId = id; $("ov").hidden = false; $("panel").hidden = false; document.body.style.overflow = "hidden"; await renderPanel(); }
   function closePanel() { openId = null; $("ov").hidden = true; $("panel").hidden = true; document.body.style.overflow = ""; }
   $("pClose").onclick = closePanel; $("ov").onclick = closePanel;
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId !== null) closePanel(); });
+  document.addEventListener("keydown", (e) => { if (e.key !== "Escape") return; if (q) closeQuick(); else if (openId !== null) closePanel(); });
 
-  const panelTop = (l) => `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 4px">${callBtn(l)}${statusSel(l)}</div>
+  const panelTop = (l) => `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 4px">${callBtn(l)}<span style="display:flex;gap:8px"><button class="s p" data-q="${l.id}">Upiši poziv</button>${statusSel(l)}</span></div>
       <div style="margin:8px 0 2px">${dots(l)} <span class="muted">interesovanje</span></div>`;
   const histHtml = (hist) => hist.map((h) => `<li>${h.tip === "poziv" ? `Status: <span class="pill st-${stIdx(h.status)}">${esc(h.status)}</span>${h.interesovanje ? ` · interesovanje ${h.interesovanje}` : ""}` : esc(h.tekst || h.tip)}<span class="muted">${fmtT(h.created_at)}${h.autor && h.autor !== me.email ? " · " + esc(h.autor) : ""}</span></li>`).join("") || `<li class="muted">Još nema zapisa.</li>`;
   async function refreshHist(id) {
