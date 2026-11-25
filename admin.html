@@ -72,7 +72,7 @@
   .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid currentColor; white-space:nowrap; }
   /* status boje */
   .st-0 { color:var(--g); } .st-1 { color:var(--o); } .st-2 { color:var(--pu); } .st-3 { color:var(--g); opacity:.75; }
-  .st-4 { color:var(--y); } .st-5 { color:#2dd4bf; } .st-6 { color:var(--bl); } .st-7 { color:var(--r); } .st-8 { color:var(--a2); }
+  .st-4 { color:var(--y); } .st-5 { color:#2dd4bf; } .st-6 { color:var(--bl); } .st-7 { color:var(--r); } .st-8 { color:var(--a2); } .st-9 { color:#818cf8; }
   select.status { width:auto; min-width:150px; padding:6px 9px; font-size:13.5px; font-weight:700; border-radius:9px; }
   /* lista firmi */
   .filters { display:grid; gap:8px; grid-template-columns:2fr repeat(4,1fr); margin-bottom:10px; }
@@ -281,9 +281,10 @@
   const BASE = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
   const ADMIN_EMAILS = ["pavlecw@gmail.com", "trajkovicpavle5@gmail.com"];
 
-  const STATUSI = ["Nije zvano","Nije se javio","Vlasnik nije tu","Nepostojeći broj","Pozvati ponovo","Zainteresovan","Zakazan demo","Nije zainteresovan","Klijent"];
+  const STATUSI = ["Nije zvano","Nije se javio","Vlasnik nije tu","Nepostojeći broj","Pozvati ponovo","Zainteresovan","Zakazan demo","Poslat demo","Nije zainteresovan","Klijent"];
+  const ST_BOJA = { "Nije zvano":0, "Nije se javio":1, "Vlasnik nije tu":2, "Nepostojeći broj":3, "Pozvati ponovo":4, "Zainteresovan":5, "Zakazan demo":6, "Poslat demo":9, "Nije zainteresovan":7, "Klijent":8 };
   const ZAVRSNI = ["Nepostojeći broj","Nije zainteresovan","Klijent"];
-  const PONOVO = { "Nije se javio": 1, "Vlasnik nije tu": 1, "Pozvati ponovo": 2, "Zainteresovan": 2 };
+  const PONOVO = { "Nije se javio": 1, "Vlasnik nije tu": 1, "Pozvati ponovo": 2, "Zainteresovan": 2, "Poslat demo": 3 };
   const INT = ["", "Nimalo", "Slabo", "Možda", "Zainteresovan", "Veoma"];
   const PRIO = { 1: "visok", 2: "srednji", 3: "niži" };
   const TIP = { otvoreno: "otvorio stranicu", poziv_pocet: "počeo poziv", poziv_zavrsen: "završio poziv" };
@@ -298,7 +299,7 @@
   const fmtT = (t) => new Date(t).toLocaleString("sr-Latn-RS", { day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit" });
   const fmtDan = (s) => s ? new Date(s + "T12:00:00").toLocaleDateString("sr-Latn-RS", { weekday:"short", day:"numeric", month:"numeric" }) : "";
   const fmtD = (s) => s == null ? "" : `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
-  const stIdx = (s) => Math.max(0, STATUSI.indexOf(s));
+  const stIdx = (s) => ST_BOJA[s] ?? 0;
   const isAdmin = () => me.uloga === "admin";
   const tel = (t) => t ? "tel:" + t.replace(/[^\d+]/g, "").replace(/^0/, "+381") : "";
   function slugify(s) {
@@ -429,7 +430,7 @@
     const nezvano = cnt("Nije zvano");
     $("stats").innerHTML = [
       [zvanoDanas, "pozvano danas"], [moji.length - nezvano, "pozvano ukupno"], [nezvano, "još nije zvano"],
-      [cnt("Zainteresovan") + cnt("Zakazan demo"), "zainteresovano / demo"], [cnt("Klijent"), "klijenata"],
+      [cnt("Zainteresovan") + cnt("Zakazan demo") + cnt("Poslat demo"), "zainteresovano / demo"], [cnt("Klijent"), "klijenata"],
     ].map(([n, t]) => `<div class="stat"><b>${n}</b><span>${t}</span></div>`).join("");
 
     const due = leads.filter((l) => l.sledeci_poziv && l.sledeci_poziv <= today && !ZAVRSNI.includes(l.status))
@@ -444,7 +445,7 @@
       $("briefList").innerHTML = nb.map((b) => { const l = leads.find((x) => x.id === b.lead_id); return l ? miniRow(l, `<span class="muted">popunio ${fmtT(b.created_at)}</span>`) : ""; }).join("")
         || `<div class="empty">Nema novih popunjenih briefova.</div>`;
       const lim = Date.now() - 3 * 864e5;
-      const stale = leads.filter((l) => l.status === "Zakazan demo" && new Date(l.updated_at).getTime() < lim);
+      const stale = leads.filter((l) => (l.status === "Zakazan demo" || l.status === "Poslat demo") && new Date(l.updated_at).getTime() < lim);
       $("nStale").textContent = stale.length;
       $("staleList").innerHTML = stale.map((l) => {
         const s = l.demo_slug ? demoStat(l.demo_slug) : null;
