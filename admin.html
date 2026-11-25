@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0b0f0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pozivi">
+<link rel="apple-touch-icon" href="ikona-180.png">
+<link rel="icon" type="image/png" href="ikona-180.png">
 <title>Admin – Phone Receptionist</title>
 <script>try{const t=localStorage.getItem("pr_tema");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
@@ -71,6 +77,7 @@
   /* lista firmi */
   .filters { display:grid; gap:8px; grid-template-columns:2fr repeat(4,1fr); margin-bottom:10px; }
   @media (max-width:760px){ .filters { grid-template-columns:1fr 1fr; } .filters .q { grid-column:1/-1; } }
+  @media (max-width:520px){ #leadList.lista .lead .acts select.status { min-width:0; flex:1; } }
   .lead { display:grid; grid-template-columns:1fr auto; gap:8px 12px; padding:12px 2px; border-bottom:1px solid var(--b); }
   .lead:last-child { border-bottom:0; }
   .lead .name { font-weight:700; cursor:pointer; line-height:1.3; }
@@ -83,6 +90,14 @@
   .dots button.on.i1 { background:var(--r); border-color:var(--r); } .dots button.on.i2 { background:var(--o); border-color:var(--o); }
   .dots button.on.i3 { background:var(--y); border-color:var(--y); } .dots button.on.i4 { background:#2dd4bf; border-color:#2dd4bf; }
   .dots button.on.i5 { background:var(--a); border-color:var(--a); }
+  /* prikaz lista */
+  #leadList.lista .lead { grid-template-columns:34px 1fr auto; gap:4px 10px; padding:8px 0; align-items:center; }
+  #leadList.lista .lead .rn { color:var(--m); font-size:12px; font-variant-numeric:tabular-nums; text-align:right; }
+  #leadList.lista .lead .meta { margin-top:1px; }
+  #leadList.lista .lead .nap { display:none; }
+  #leadList.lista .lead .acts { grid-column:2 / -1; }
+  #leadList.lista .call { padding:6px 10px; font-size:13.5px; }
+  #leadList:not(.lista) .rn { display:none; }
   .mini { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--b); }
   .mini:last-child { border-bottom:0; }
   .mini .l { min-width:0; } .mini .l b { cursor:pointer; } .mini .l b:hover { color:var(--a2); }
@@ -163,9 +178,11 @@
       <select id="fDel"></select>
       <select id="fGrad"></select>
     </div>
-    <div class="row" style="align-items:center;margin-bottom:8px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="seg" id="modeView" style="margin:0"><button type="button" data-m="lista" class="on">Lista</button><button type="button" data-m="kartice">Kartice</button></div>
+      <select id="fSort" style="width:auto"><option value="tabela">Redosled kao u tabeli</option><option value="prioritet">Prvo visok prioritet</option><option value="ime">Po imenu A–Ž</option><option value="ponovo">Po datumu ponovnog poziva</option></select>
       <div class="muted" id="count"></div>
-      <div style="flex:0;white-space:nowrap"><button class="s" id="newLead">+ Nova firma</button></div>
+      <button class="s" id="newLead">+ Nova firma</button>
     </div>
     <div class="card" style="padding:4px 14px"><div id="leadList"></div></div>
   </section>
@@ -438,7 +455,25 @@
     $("fGrad").innerHTML = `<option value="">Svi gradovi</option>` + uniq("grad").map((d) => `<option>${esc(d)}</option>`).join("");
     $("fStatus").value = vs; $("fDel").value = vd; $("fGrad").value = vg;
   }
-  ["fq","fStatus","fVl","fDel","fGrad"].forEach((id) => $(id).addEventListener("input", renderPozivi));
+  ["fq","fStatus","fVl","fDel","fGrad","fSort"].forEach((id) => $(id).addEventListener("input", renderPozivi));
+  let viewMode = "lista";
+  try { viewMode = localStorage.getItem("pr_prikaz") || "lista"; const so = localStorage.getItem("pr_sort"); if (so) $("fSort").value = so; } catch (e) {}
+  function setViewMode(m) {
+    viewMode = m; $("leadList").classList.toggle("lista", m === "lista");
+    document.querySelectorAll("#modeView button").forEach((b) => b.classList.toggle("on", b.dataset.m === m));
+    try { localStorage.setItem("pr_prikaz", m); } catch (e) {}
+  }
+  document.querySelectorAll("#modeView button").forEach((b) => b.onclick = () => setViewMode(b.dataset.m));
+  $("fSort").addEventListener("change", () => { try { localStorage.setItem("pr_sort", $("fSort").value); } catch (e) {} });
+  setViewMode(viewMode);
+  function sortiraj(list) {
+    const k = $("fSort").value, a = [...list];
+    if (k === "tabela") a.sort((x, y) => x.id - y.id);
+    if (k === "prioritet") a.sort((x, y) => (x.prioritet || 9) - (y.prioritet || 9) || x.id - y.id);
+    if (k === "ime") a.sort((x, y) => x.firma.localeCompare(y.firma, "sr"));
+    if (k === "ponovo") a.sort((x, y) => (x.sledeci_poziv || "9999").localeCompare(y.sledeci_poziv || "9999") || x.id - y.id);
+    return a;
+  }
   function filtered() {
     const q = $("fq").value.trim().toLowerCase(), st = $("fStatus").value, vl = $("fVl").value, d = $("fDel").value, g = $("fGrad").value, today = dan();
     return leads.filter((l) => {
@@ -453,12 +488,13 @@
     });
   }
   function renderPozivi() {
-    const list = filtered();
+    const list = sortiraj(filtered());
     $("count").textContent = `${list.length} od ${leads.length} firmi`;
-    $("leadList").innerHTML = list.map((l) => `<div class="lead">
+    $("leadList").innerHTML = list.map((l, i) => `<div class="lead">
+      <div class="rn">${i + 1}</div>
       <div><div class="name" data-open="${l.id}">${esc(l.firma)}</div>
         <div class="meta">${[l.grad, l.delatnost, l.prioritet ? "prioritet " + PRIO[l.prioritet] : "", isAdmin() && l.vlasnik === "partner" ? "partner" : "", l.poslednji_poziv ? "zvan " + fmtDan(l.poslednji_poziv) : "", l.sledeci_poziv && !ZAVRSNI.includes(l.status) ? "ponovo " + fmtDan(l.sledeci_poziv) : ""].filter(Boolean).map(esc).join(" · ")}</div>
-        ${l.napomena ? `<div class="meta" style="color:var(--t);opacity:.85">${esc(l.napomena.length > 140 ? l.napomena.slice(0, 140) + "…" : l.napomena)}</div>` : ""}
+        ${l.napomena ? `<div class="meta nap" style="color:var(--t);opacity:.85">${esc(l.napomena.length > 140 ? l.napomena.slice(0, 140) + "…" : l.napomena)}</div>` : ""}
       </div>
       <div>${callBtn(l)}</div>
       <div class="acts">${statusSel(l)}${dots(l)}${l.demo_slug ? `<span class="pill st-6">demo</span>` : ""}${isAdmin() && briefOf(l.id) ? `<span class="pill st-8">brief</span>` : ""}</div>
