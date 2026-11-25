@@ -73,7 +73,7 @@
   .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid currentColor; white-space:nowrap; }
   /* status boje */
   .st-0 { color:var(--g); } .st-1 { color:var(--o); } .st-2 { color:var(--pu); } .st-3 { color:var(--g); opacity:.75; }
-  .st-4 { color:var(--y); } .st-5 { color:#2dd4bf; } .st-6 { color:var(--bl); } .st-7 { color:var(--r); } .st-8 { color:var(--a2); } .st-9 { color:#818cf8; }
+  .st-4 { color:var(--y); } .st-5 { color:#2dd4bf; } .st-6 { color:var(--bl); } .st-7 { color:var(--r); } .st-8 { color:var(--a2); } .st-9 { color:#818cf8; } .st-10 { color:#f472b6; }
   select.status { width:auto; min-width:150px; padding:6px 9px; font-size:13.5px; font-weight:700; border-radius:9px; }
   /* lista firmi */
   .filters { display:grid; gap:8px; grid-template-columns:2fr repeat(4,1fr); margin-bottom:10px; }
@@ -286,10 +286,10 @@
   const BASE = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
   const ADMIN_EMAILS = ["pavlecw@gmail.com", "trajkovicpavle5@gmail.com"];
 
-  const STATUSI = ["Nije zvano","Nije se javio","Vlasnik nije tu","Nepostojeći broj","Pozvati ponovo","Zainteresovan","Zakazan demo","Poslat demo","Nije zainteresovan","Klijent"];
-  const ST_BOJA = { "Nije zvano":0, "Nije se javio":1, "Vlasnik nije tu":2, "Nepostojeći broj":3, "Pozvati ponovo":4, "Zainteresovan":5, "Zakazan demo":6, "Poslat demo":9, "Nije zainteresovan":7, "Klijent":8 };
+  const STATUSI = ["Nije zvano","Nije se javio","Govorna pošta","Vlasnik nije tu","Nepostojeći broj","Pozvati ponovo","Zainteresovan","Zakazan demo","Poslat demo","Nije zainteresovan","Klijent"];
+  const ST_BOJA = { "Nije zvano":0, "Nije se javio":1, "Vlasnik nije tu":2, "Nepostojeći broj":3, "Pozvati ponovo":4, "Zainteresovan":5, "Zakazan demo":6, "Poslat demo":9, "Govorna pošta":10, "Nije zainteresovan":7, "Klijent":8 };
   const ZAVRSNI = ["Nepostojeći broj","Nije zainteresovan","Klijent"];
-  const PONOVO = { "Nije se javio": 1, "Vlasnik nije tu": 1, "Pozvati ponovo": 2, "Zainteresovan": 2, "Poslat demo": 3 };
+  const PONOVO = { "Nije se javio": 1, "Govorna pošta": 1, "Vlasnik nije tu": 1, "Pozvati ponovo": 2, "Zainteresovan": 2, "Poslat demo": 3 };
   const INT = ["", "Nimalo", "Slabo", "Možda", "Zainteresovan", "Veoma"];
   const PRIO = { 1: "visok", 2: "srednji", 3: "niži" };
   const TIP = { otvoreno: "otvorio stranicu", poziv_pocet: "počeo poziv", poziv_zavrsen: "završio poziv" };
