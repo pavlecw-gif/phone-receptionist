@@ -436,13 +436,13 @@
     const due = leads.filter((l) => l.sledeci_poziv && l.sledeci_poziv <= today && !ZAVRSNI.includes(l.status))
       .sort((a, b) => a.sledeci_poziv.localeCompare(b.sledeci_poziv));
     $("nDue").textContent = due.length;
-    $("dueList").innerHTML = due.map((l) => miniRow(l, l.sledeci_poziv < today ? `<span class="pill st-7">kasni od ${fmtDan(l.sledeci_poziv)}</span>` : `<span class="pill st-${stIdx(l.status)}">${esc(l.status)}</span>`)).join("")
+    $("dueList").innerHTML = due.map((l) => miniRow(l, l.sledeci_poziv < today ? `<span class="pill st-7">kasni od ${fmtDan(l.sledeci_poziv)}</span>` : `<span class="pill st-${stIdx(l.status)}">${esc(l.status)}</span>`, "poziv")).join("")
       || `<div class="empty">Nema zakazanih poziva za danas. Kad staviš „Nije se javio“, „Vlasnik nije tu“ ili „Pozvati ponovo“, firma se ovde vraća.</div>`;
 
     if (isAdmin()) {
       const nb = briefs.filter((b) => !b.procitan);
       $("nBrief").textContent = nb.length;
-      $("briefList").innerHTML = nb.map((b) => { const l = leads.find((x) => x.id === b.lead_id); return l ? miniRow(l, `<span class="muted">popunio ${fmtT(b.created_at)}</span>`) : ""; }).join("")
+      $("briefList").innerHTML = nb.map((b) => { const l = leads.find((x) => x.id === b.lead_id); return l ? miniRow(l, `<span class="muted">popunio ${fmtT(b.created_at)}</span>`, "brief") : ""; }).join("")
         || `<div class="empty">Nema novih popunjenih briefova.</div>`;
       const lim = Date.now() - 3 * 864e5;
       const stale = leads.filter((l) => (l.status === "Zakazan demo" || l.status === "Poslat demo") && new Date(l.updated_at).getTime() < lim);
@@ -467,8 +467,35 @@
     const next = leads.filter((l) => l.status === "Nije zvano" && l.telefon && (!isAdmin() || l.vlasnik === "pavle")).slice(0, 8);
     $("nextList").innerHTML = next.map((l) => miniRow(l, `<span class="muted">${esc(l.delatnost || "")}</span>`)).join("") || `<div class="empty">Sve firme sa liste su pozvane.</div>`;
   }
-  function miniRow(l, right) {
-    return `<div class="mini"><div class="l"><b data-open="${l.id}">${esc(l.firma)}</b><div class="muted">${esc(l.grad || "")}${l.telefon ? " · " + esc(l.telefon) : ""}</div>${right ? `<div style="margin-top:4px">${right}</div>` : ""}</div><div style="display:flex;gap:6px;flex:none">${l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}Pozovi</a>` : ""}<button class="s" data-q="${l.id}">Upiši</button></div></div>`;
+  function miniRow(l, right, ukloni) {
+    return `<div class="mini"><div class="l"><b data-open="${l.id}">${esc(l.firma)}</b><div class="muted">${esc(l.grad || "")}${l.telefon ? " · " + esc(l.telefon) : ""}</div>${right ? `<div style="margin-top:4px">${right}</div>` : ""}</div><div style="display:flex;gap:6px;flex:none">${l.telefon ? `<a class="call" href="${tel(l.telefon)}">${PHONE}Pozovi</a>` : ""}<button class="s" data-q="${l.id}">Upiši</button>${ukloni ? `<button class="s ghost" data-ukloni="${ukloni}" data-id="${l.id}" title="Ukloni sa liste" aria-label="Ukloni sa liste">✕</button>` : ""}</div></div>`;
+  }
+
+  let undo = null;
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-ukloni]"); if (!b) return;
+    const l = leads.find((x) => x.id == b.dataset.id); if (!l) return;
+    if (b.dataset.ukloni === "poziv") {
+      const staro = l.sledeci_poziv;
+      const { error } = await sb.from("leadovi").update({ sledeci_poziv: null }).eq("id", l.id);
+      if (error) return toast("Nije sačuvano: " + error.message);
+      l.sledeci_poziv = null; undo = { id: l.id, staro };
+      toastUndo(`${l.firma} je sklonjen sa liste za danas.`);
+    } else if (b.dataset.ukloni === "brief") {
+      const br = briefOf(l.id); if (!br) return;
+      br.procitan = true; await sb.from("briefovi").update({ procitan: true }).eq("id", br.id);
+      toast("Brief označen kao pročitan");
+    }
+    renderDanas();
+  });
+  function toastUndo(t) {
+    $("toast").innerHTML = `${esc(t)} <button class="s" id="undoBtn" style="margin-left:8px">Vrati</button>`;
+    $("toast").hidden = false; clearTimeout(tt); tt = setTimeout(() => { $("toast").hidden = true; undo = null; }, 6000);
+    $("undoBtn").onclick = async () => {
+      if (!undo) return; const l = leads.find((x) => x.id === undo.id);
+      await sb.from("leadovi").update({ sledeci_poziv: undo.staro }).eq("id", undo.id);
+      if (l) l.sledeci_poziv = undo.staro; undo = null; $("toast").hidden = true; renderDanas();
+    };
   }
 
   // ---------- POZIVI ----------
