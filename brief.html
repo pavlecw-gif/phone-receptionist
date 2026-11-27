@@ -147,6 +147,13 @@
   const DB_KEY = "sb_publishable_xwyOOlLotEszvLIpwtTrHw_tGTBTtxF";
   const $ = (id) => document.getElementById(id);
   const token = (new URLSearchParams(location.search).get("b") || "").trim();
+  const PRIMER = (new URLSearchParams(location.search).get("primer") || "").trim().toLowerCase();
+  const PRIMER_FIRME = {
+    auto: { firma: "Auto servis Primer", delatnost: "Auto servis", adresa: "Bulevar Nemanjića 1, Niš" },
+    zubar: { firma: "Stomatološka ordinacija Primer", delatnost: "Stomatološka ordinacija", adresa: "Obrenovićeva 1, Niš" },
+    salon: { firma: "Frizerski salon Primer", delatnost: "Frizerski salon", adresa: "Vožda Karađorđa 1, Niš" },
+    zdravlje: { firma: "Poliklinika Primer", delatnost: "Zdravstvo - poliklinika", adresa: "Cara Dušana 1, Niš" },
+  };
 
   const PRIMERI = {
     auto: {
@@ -276,9 +283,13 @@
   }
 
   async function init() {
-    if (!/^[0-9a-f-]{36}$/i.test(token)) { $("loading").hidden = true; $("bad").hidden = false; return; }
     let info;
-    try { const r = await rpc("brief_info", { p_token: token }); info = r && r[0]; } catch (e) { info = null; }
+    if (PRIMER) {
+      info = PRIMER_FIRME[PRIMER] || PRIMER_FIRME.auto;
+    } else {
+      if (!/^[0-9a-f-]{36}$/i.test(token)) { $("loading").hidden = true; $("bad").hidden = false; return; }
+      try { const r = await rpc("brief_info", { p_token: token }); info = r && r[0]; } catch (e) { info = null; }
+    }
     $("loading").hidden = true;
     if (!info) { $("bad").hidden = false; return; }
     P = PRIMERI[vrsta(info.delatnost)];
@@ -291,6 +302,7 @@
     $("kTel").value = "";
     ["usluge","pitanja","uzeti","nesme"].forEach(chips); renderPrices();
     $("h3").disabled = true;
+    if (PRIMER) { const n = document.createElement("div"); n.className = "q"; n.style.borderColor = "var(--a)"; n.innerHTML = '<b>Probni prikaz.</b> <span class="hint">Ovako firma vidi formu. Ništa se ne šalje i ne čuva.</span>'; $("form").insertBefore(n, $("form").firstChild); }
     $("form").hidden = false; $("sendBar").hidden = false; progress();
   }
 
@@ -308,6 +320,7 @@
       napomena: $("napomena").value.trim(), kontakt_ime: $("kIme").value.trim(), kontakt_tel: $("kTel").value.trim(),
       popunjeno: Object.values(d).filter(Boolean).length,
     };
+    if (PRIMER) { console.log("Probni brief (nije poslat):", odg); $("form").hidden = true; $("sendBar").hidden = true; $("thanks").hidden = false; window.scrollTo(0, 0); return; }
     $("sendBtn").disabled = true; $("sendBtn").textContent = "Šaljem…";
     try {
       const ok = await rpc("posalji_brief", { p_token: token, p_odgovori: odg });
